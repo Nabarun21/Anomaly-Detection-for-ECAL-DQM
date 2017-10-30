@@ -42,7 +42,7 @@ autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
 
 #get the data
 
-filename='../data/ECAL_rechit_occ_time_273158.hdf5'
+filename='../data/ECAL_rechit_occ_time_283877.hdf5'
 input_file=h5py.File(filename,'r')
 data=np.array((input_file['EBOccupancyTask_EBOT_rec_hit_occupancy']))
 data=np.reshape(data,(len(data),1,170,360))
@@ -50,7 +50,7 @@ data=np.reshape(data,(len(data),1,170,360))
 
 autoencoder.fit(data,data,
                 epochs=5,
-                batch_size=2,
+                batch_size=20,
                 shuffle=True,
                 validation_data=(data, data))
 
