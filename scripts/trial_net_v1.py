@@ -3,12 +3,12 @@ import os
 import h5py
 
 import logging
-logging.basicConfig(level=logging.DEBUG, filename='temp.log', format='%(asctime)s%(levelname)s:%(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
-#from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
-#from keras.models import Model
-#from keras import backend as K
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
+from keras.models import Model
+from keras import backend as K
 
 """ This is the version 1 model, train in batches"""
 
@@ -26,10 +26,18 @@ def get_data(file_name):
 
 def batch_generator(batch_size):
    """ generates batch_size images, well thats's obvious. throws exception when data runs out"""
+   if batch_size<=0 or not isinstance(batch_size,int):
+      logging.error("Batch size needs to be an integer greater than 0")
+      return 0
+   
 
    global file_list
    file_index=0
    leftover_array=get_data(file_list[file_index]) #start off with the first data file
+   image_height=leftover_array.shape[1]
+   image_width=leftover_array.shape[2]
+
+   num_batches_generated=0
    while True:
       new_batch=False
       while not new_batch:
@@ -47,9 +55,12 @@ def batch_generator(batch_size):
             try:
                new_array=get_data(file_list[file_index])
             except IndexError as exc:
-               logging.debug("Ran out of data, can't suppy more images to the model")
-               print("Ran out of data, can't supply more images to the model, ",exc)
+               if num_batches_generated>0:
+                  logging.info("Ran out of data, can't suppy more images to the model, "+str(exc)+". Supplied "+str(num_batches_generated)+" batches")
+               else:
+                  logging.info("Increase your dataset size or reduce your batch size, i can't even make a single batch!!") 
                return 0
+            
             num_current_samples=new_array.shape[0]
 
             if num_current_samples<samples_needed_for_next_batch:
@@ -67,13 +78,15 @@ def batch_generator(batch_size):
                ret_array=np.concatenate([leftover_array,new_array])
                new_batch=True
                left_over_array=np.zeros(shape=[0,image_height,image_width])
-      assert(ret_array.shape[0]==batch_size)   
+
+      assert(ret_array.shape[0]==batch_size)
+      num_batches_generated+=1
       yield ret_array
       
 
 
 
-"""
+
 #first the model
 
 input_img=Input(shape=(1,170,360))
@@ -103,7 +116,7 @@ autoencoder=Model(input_img, decoded_final)
 autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
 
 
-"""
+
 #get the data
 try:
    data_folder=os.environ["DATA"]
@@ -117,9 +130,11 @@ logging.debug("Current file list is "+str(file_list)+" and has "+str(len(file_li
 
       
       
-my_generator=batch_generator(100)
+my_generator=batch_generator(32)
 for batch in my_generator:
    print(batch.shape,"   ",batch[0][0][0])
+
+
 """input_file=h5py.File(filename,'r')
 data=np.array((input_file['EBOccupancyTask_EBOT_rec_hit_occupancy']))
 print(data.shape)
