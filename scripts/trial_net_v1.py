@@ -1,3 +1,4 @@
+
 import numpy as np
 import os
 import h5py
@@ -81,6 +82,7 @@ def batch_generator(batch_size):
 
       assert(ret_array.shape[0]==batch_size)
       num_batches_generated+=1
+      ret_array=np.reshape(ret_array,(len(ret_array),1,170,360))
       yield ret_array
       
 
@@ -130,35 +132,13 @@ logging.debug("Current file list is "+str(file_list)+" and has "+str(len(file_li
 
       
       
-my_generator=batch_generator(32)
+my_generator=batch_generator(20)
 for batch in my_generator:
-   print(batch.shape,"   ",batch[0][0][0])
+   autoencoder.fit(batch,batch,
+                epochs=5,
+                batch_size=2,
+                shuffle=True,
+                validation_data=(batch, batch))
 
 
-"""input_file=h5py.File(filename,'r')
-data=np.array((input_file['EBOccupancyTask_EBOT_rec_hit_occupancy']))
-print(data.shape)
-filename2='../data/ECAL_rechit_occ_time_280016.hdf5'
-input_file2=h5py.File(filename2,'r')
-data3=data[0:150,:,:]
 
-#data2=np.array((input_file2['EBOccupancyTask_EBOT_rec_hit_occupancy']))
-#print(data2.shape)
-#data2=np.reshape(data,(len(data),1,170,360))
-
-#data3=np.concatenate([data,data2])
-print(data3.shape)
-print(data3[149])
-data4=data[150:,:,:]
-print(data4.shape)
-print(data4[0])
-
-
-#autoencoder.fit(data,data,
-#                epochs=5,
-#                batch_size=2,
-#                shuffle=True,
-#                validation_data=(data, data))
-#
-
-"""
