@@ -58,9 +58,11 @@ def batch_generator(batch_size):
             except IndexError as exc:
                if num_batches_generated>0:
                   logging.info("Ran out of data, can't suppy more images to the model, "+str(exc)+". Supplied "+str(num_batches_generated)+" batches")
+                  raise StopIteration("Ran out of data, can't suppy more images to the model, "+str(exc)+". Supplied "+str(num_batches_generated)+" batches")
                else:
                   logging.info("Increase your dataset size or reduce your batch size, i can't even make a single batch!!") 
-               return 0
+                  raise StopIteration("Increase your dataset size or reduce your batch size, i can't even make a single batch!!") 
+
             
             num_current_samples=new_array.shape[0]
 
