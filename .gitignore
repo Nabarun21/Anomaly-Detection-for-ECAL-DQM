@@ -26,5 +26,5 @@ callgrind.out.*
 *.sum
 *~
 *.hdf5
-
+*.edu
 

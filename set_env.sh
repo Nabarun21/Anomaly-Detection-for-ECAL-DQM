@@ -1,8 +1,7 @@
 #!bin/bash
 
-source ~/tensorflow/bin/activate
 
-
+export BASEDIR=`pwd`
 
 export DATA=`pwd`"/data"
 
