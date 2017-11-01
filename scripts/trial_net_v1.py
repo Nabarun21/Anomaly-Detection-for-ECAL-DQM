@@ -1,4 +1,3 @@
-
 import numpy as np
 import os
 import h5py
@@ -10,7 +9,8 @@ logger = logging.getLogger(__name__)
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
 from keras.models import Model
 from keras import backend as K
-
+from keras import callbacks
+from keras.utils import plot_model
 """ This is the version 1 model, train in batches"""
 
 
@@ -25,11 +25,12 @@ def get_data(file_name):
    return ret_array
    
 
+#generator
 def batch_generator(batch_size):
    """ generates batch_size images, well thats's obvious. throws exception when data runs out"""
    if batch_size<=0 or not isinstance(batch_size,int):
       logging.error("Batch size needs to be an integer greater than 0")
-      return 0
+      raise StopIteration("Batch size needs to be an integer greater than !!")
    
 
    global file_list
@@ -61,7 +62,7 @@ def batch_generator(batch_size):
                   raise StopIteration("Ran out of data, can't suppy more images to the model, "+str(exc)+". Supplied "+str(num_batches_generated)+" batches")
                else:
                   logging.info("Increase your dataset size or reduce your batch size, i can't even make a single batch!!") 
-                  raise StopIteration("Increase your dataset size or reduce your batch size, i can't even make a single batch!!") 
+                  raise StopIteration("Increase your dataset size or reduce your batch size, i can't even make a single batch!! ,"+str(exc)) 
 
             
             num_current_samples=new_array.shape[0]
@@ -130,17 +131,15 @@ except KeyError:
 file_list=os.listdir(data_folder)
 
 logging.debug("Current file list is "+str(file_list)+" and has "+str(len(file_list))+" files")
-
-
       
-      
-my_generator=batch_generator(20)
-for batch in my_generator:
-   autoencoder.fit(batch,batch,
-                epochs=5,
-                batch_size=2,
-                shuffle=True,
-                validation_data=(batch, batch))
+
+num_epochs=1
+for epoch in range(num_epochs):
+   my_generator=batch_generator(180)
+   logging.info("Epoch no %s",epoch+1)
+   for batch in my_generator:
+      autoencoder.fit(batch,batch,epochs=1,batch_size=30,shuffle=True,validation_split=0.25,callbacks=[tensorboard,training_history])
+
 
 
 
