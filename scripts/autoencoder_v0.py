@@ -136,24 +136,24 @@ def batch_generator(batch_size,data_file_list):
 input_img=Input(shape=(1,170,360))
 
 #encoder
-encoder_layer_1=Conv2D(8,(5,5),activation='relu',padding='same',data_format='channels_first')(input_img)
+encoder_layer_1=Conv2D(8,(3,3),activation='relu',padding='same',data_format='channels_first')(input_img)
 encoder_layer_1_pooled=MaxPooling2D((2, 2), padding='same',data_format='channels_first')(encoder_layer_1)
 
 
-encoder_layer_2=Conv2D(8,(5,5),activation='relu',padding='same',data_format='channels_first')(encoder_layer_1_pooled)
+encoder_layer_2=Conv2D(8,(3,3),activation='relu',padding='same',data_format='channels_first')(encoder_layer_1_pooled)
 encoded_final=MaxPooling2D((5, 5), padding='same',data_format='channels_first')(encoder_layer_2)
 
 
 #decoder
-decoder_layer_1=Conv2D(8, (5, 5), activation='relu', padding='same',data_format='channels_first')(encoded_final)
+decoder_layer_1=Conv2D(8, (3, 3), activation='relu', padding='same',data_format='channels_first')(encoded_final)
 decoder_layer_1_upsampled=UpSampling2D((5, 5),data_format='channels_first')(decoder_layer_1)
 
 
-decoder_layer_2=Conv2D(8, (5, 5), activation='relu', padding='same',data_format='channels_first')(decoder_layer_1_upsampled)
+decoder_layer_2=Conv2D(8, (3, 3), activation='relu', padding='same',data_format='channels_first')(decoder_layer_1_upsampled)
 decoder_layer_2_upsampled=UpSampling2D((2, 2),data_format='channels_first')(decoder_layer_2)
 
 
-decoded_final=Conv2D(1,(5,5),activation='sigmoid',data_format='channels_first',padding='same')(decoder_layer_2_upsampled)
+decoded_final=Conv2D(1,(3,3),activation='sigmoid',data_format='channels_first',padding='same')(decoder_layer_2_upsampled)
 
 
 autoencoder=Model(input_img, decoded_final)
@@ -168,8 +168,8 @@ except KeyError:
    "Please cd into the module's base folder and run set_env from there."
    
 file_list=os.listdir(data_folder)
-train_data_list=file_list[0:63] #choosing 63 here keeps ~80% of data for testing, rest for training and val, need to automatize this
-test_data_list=file_list[63:]
+train_data_list=file_list[0:3] #choosing 63 here keeps ~80% of data for testing, rest for training and val, need to automatize this
+test_data_list=file_list[63:64]
 
 
 logging.debug("Current file list is "+str(file_list)+" and has "+str(len(file_list))+" files")
@@ -183,17 +183,34 @@ tensorboard=callbacks.TensorBoard(log_dir='../logs', histogram_freq=1, batch_siz
 training_history=train_histories()
       
 
-num_epochs=1
+num_epochs=10
+patience=3    #number of epochs where we see no improvement after which we stop training
+current_epoch_loss=1000   #arbitrarily large number
 epochwise_loss_history=[]
 batchwise_loss_history=[]
 
+
 for epoch in range(num_epochs):
+   np.random.shuffle(train_data_list)
    my_generator=batch_generator(300,train_data_list)
    logging.info("Epoch no %s",epoch+1)
+   gen_batch_loss_history=[]
    for batch in my_generator:
       autoencoder.fit(batch,batch,epochs=1,batch_size=30,shuffle=True,validation_split=0.25,callbacks=[tensorboard,training_history,early_stopping])
       batchwise_loss_history.extend(training_history.batchwise_losses)
-   epochwise_loss_history.extend(training_history.epochwise_losses)
+      gen_batch_loss_history.extend(training_history.epochwise_losses)
+   epoch_loss=np.mean(gen_batch_loss_history)
+   epochwise_loss_history.extend(epoch_loss)
+   if epoch_loss<last_epoch_loss:
+      last_epoch_loss=epoch_loss
+      count=0
+   else:
+      count+=1
+   assert(count<=patience)
+   if count==patience:
+      logging.info("Stopping training:Loss hasn't decreased for last "+str(patience)+" epochs and I have run out of patience")
+      break
+
 
 print(epochwise_loss_history)
 print(batchwise_loss_history)
