@@ -19,6 +19,7 @@ from keras import callbacks
 #helper fucntions
 
 def get_data(file_name):
+   global data_folder
    input_file=h5py.File(data_folder+"/"+file_name,'r')
    logging.debug("Loading data from file: "+file_name)
    ret_array=np.array((input_file['EBOccupancyTask_EBOT_rec_hit_occupancy']))
@@ -30,7 +31,8 @@ def get_data(file_name):
 class train_histories(callbacks.Callback):
    def on_train_begin(self, logs={}):
       self.aucs = []
-      self.losses = []
+      self.epochwise_losses = []
+      self.batchwise_losses = []
 
    def on_train_end(self, logs={}):
       return
@@ -39,28 +41,28 @@ class train_histories(callbacks.Callback):
       return
 
    def on_epoch_end(self, epoch, logs={}):
-      self.losses.append(logs.get('loss'))
+      self.epochwise_losses.append(logs.get('loss'))
       return
 
    def on_batch_begin(self, batch, logs={}):
       return
 
    def on_batch_end(self, batch, logs={}):
+      self.batchwise_losses.append(logs.get('loss'))
       return
 
 
 
 #generator
-def batch_generator(batch_size):
+def batch_generator(batch_size,data_file_list):
    """ generates batch_size images, well thats's obvious. throws exception when data runs out"""
    if batch_size<=0 or not isinstance(batch_size,int):
       logging.error("Batch size needs to be an integer greater than 0")
       raise StopIteration("Batch size needs to be an integer greater than !!")
    
 
-   global file_list
    file_index=0
-   leftover_array=get_data(file_list[file_index]) #start off with the first data file
+   leftover_array=get_data(data_file_list[file_index]) #start off with the first data file
    image_height=leftover_array.shape[1]
    image_width=leftover_array.shape[2]
 
@@ -80,7 +82,7 @@ def batch_generator(batch_size):
             logging.debug("Current/leftover batch doesn't have enough samples, loading new file")
             file_index+=1
             try:
-               new_array=get_data(file_list[file_index])
+               new_array=get_data(data_file_list[file_index])
             except IndexError as exc:
                if num_batches_generated>0:
                   logging.info("Ran out of data, can't suppy more images to the model, "+str(exc)+". Supplied "+str(num_batches_generated)+" batches")
@@ -154,22 +156,37 @@ except KeyError:
    "Please cd into the module's base folder and run set_env from there."
    
 file_list=os.listdir(data_folder)
-file_list=file_list[0:1]
+train_data_list=file_list[0:2]
+test_data_list=file_list[63:64]
+
 
 logging.debug("Current file list is "+str(file_list)+" and has "+str(len(file_list))+" files")
 
-
+early_stopping = callbacks.EarlyStopping(monitor='val_loss', patience=3)
 tensorboard=callbacks.TensorBoard(log_dir='../logs', histogram_freq=1, batch_size=32, write_graph=True, write_grads=True, write_images=True, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
 training_history=train_histories()
       
 
 num_epochs=1
+epochwise_loss_history=[]
+batchwise_loss_history=[]
 for epoch in range(num_epochs):
-   my_generator=batch_generator(180)
+   my_generator=batch_generator(300,train_data_list)
    logging.info("Epoch no %s",epoch+1)
    for batch in my_generator:
-      autoencoder.fit(batch,batch,epochs=1,batch_size=30,shuffle=True,validation_split=0.25,callbacks=[tensorboard,training_history])
+      autoencoder.fit(batch,batch,epochs=1,batch_size=30,shuffle=True,validation_split=0.25,callbacks=[tensorboard,training_history,early_stopping])
+      batchwise_loss_history.extend(training_history.batchwise_losses)
+   epochwise_loss_history.extend(training_history.epochwise_losses)
 
 
-print(training_history.losses)
+json_string = autoencoder.to_json()
+
+print(json_string)
+print(epochwise_loss_history)
+print(batchwise_loss_history)
+
+my_test_generator=batch_generator(300,test_data_list)
+for test_batch in my_test_generator:
+   loss=autoencoder.evaluate(test_batch,test_batch,batch_size=30)
+   print(loss)
 
