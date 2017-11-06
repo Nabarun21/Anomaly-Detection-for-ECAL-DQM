@@ -1,11 +1,11 @@
 #!/bin/bash
-#$ -pe smp 10             # 24 cores and 4 GPUs per machine 
+##$ -pe smp 24             # 24 cores and 4 GPUs per machine 
                          # so ask for 4 cores  to get one GPU
 #$ -M ndev@nd.edu
 #$ -m abe
 
 #$ -q gpu                # Specify queue
-#$ -l gpu_card=2         # This job is just going to use one GPU card
+#$ -l hostname="qa-1080ti-004"         # This job is just going to use one GPU card
 #$ -N test               # Specify job name
 #$ -o sgeLogs            # Where to put the output
 
@@ -47,7 +47,7 @@ echo '==================================='
 cd /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/
 echo `pwd`
 source set_env.sh
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --log_name trial_gpu.log>&test/train.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --log_name trial_gpu.log --model_name autoencoder_v0>&test/train.log
 cd -
 echo '==================================='
 #ls -alh

@@ -1,7 +1,9 @@
 import numpy as np
+import pickle
 import os
 import h5py
 import argparse
+import matplotlib.pyplot as plt
 
 import logging
 
@@ -17,22 +19,22 @@ from keras import callbacks
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-      "--log_name",
-      action="store",
-      dest="log_name",
-      default="trial.log",
-      help="Name of the file where logs are written, will be created and saved in logs directory")
-parser.add_argument(
       "--model_name",
       action="store",
       dest="model_name",
       default="autoencoder",
       help="name of the saved model, will be saved as a h5 file under the models directory")
+parser.add_argument(
+      "--opt_name",
+      action="store",
+      dest="opt_name",
+      default="adadelta",
+      help="name of the optimizer to be used")
 
 args = parser.parse_args()
 
-#logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s',filename=os.environ["BASEDIR"]+'/logs/'+args.log_name)
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s',filename=os.environ["BASEDIR"]+'/logs/'+args.log_name)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s',filename=os.environ["BASEDIR"]+'/logs/'+args.model_name+'_'+args.opt_name+'.log')
+#logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s',filename=os.environ["BASEDIR"]+'/logs/'+args.log_name)
 logger = logging.getLogger(__name__)
 
 #helper fucntions
@@ -56,7 +58,6 @@ def get_num_samples(file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy'):
       total_count+=data.shape[0]
    return total_count
 
-#custom callback fucntions
 
 class train_histories(callbacks.Callback):
    def on_train_begin(self, logs={}):
@@ -178,7 +179,7 @@ decoded_final=Conv2D(1,(3,3),activation='sigmoid',data_format='channels_first',p
 
 
 autoencoder=Model(input_img, decoded_final)
-autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
+autoencoder.compile(optimizer=args.opt_name, loss='binary_crossentropy')
 
 
 
@@ -189,8 +190,8 @@ except KeyError:
    "Please cd into the module's base folder and run set_env from there."
    
 file_list=os.listdir(data_folder)
-train_data_list=file_list[0:1] #choosing 63 here keeps ~80% of data for testing, rest for training and val, need to automatize this
-test_data_list=file_list[63:64]
+train_data_list=file_list[0:63] #choosing 63 here keeps ~80% of data for testing, rest for training and val, need to automatize this
+test_data_list=file_list[63:]
 
 
 logging.debug("Current file list is "+str(file_list)+" and has "+str(len(file_list))+" files")
@@ -204,8 +205,8 @@ tensorboard=callbacks.TensorBoard(log_dir='../logs', histogram_freq=1, batch_siz
 training_history=train_histories()
       
 
-num_epochs=3
-patience=3    #number of epochs where we see no improvement after which we stop training
+num_epochs=100
+patience=5    #number of epochs where we see no improvement after which we stop training
 last_epoch_val_loss=1000   #arbitrarily large number
 epochwise_loss_history=[]
 batchwise_loss_history=[]
@@ -214,16 +215,15 @@ batchwise_val_loss_history=[]
 
 
 for epoch in range(num_epochs):
-#   np.random.shuffle(train_data_list)
-   my_generator=batch_generator(500,train_data_list)
+   np.random.shuffle(train_data_list)
+   my_generator=batch_generator(600,train_data_list)
    logging.info("Epoch no %s",epoch+1)
    gen_batch_loss_history=[]
    gen_batch_val_loss_history=[]
    for batch in my_generator:
-      autoencoder.fit(batch,batch,epochs=1,batch_size=50,shuffle=False,validation_split=0.25,callbacks=[training_history,early_stopping])
+      autoencoder.fit(batch,batch,epochs=1,batch_size=30,shuffle=False,validation_split=0.25,callbacks=[training_history,early_stopping])
       batchwise_loss_history.extend(training_history.batchwise_losses)
       gen_batch_loss_history.extend(training_history.epochwise_losses)
-      batchwise_val_loss_history.extend(training_history.batchwise_val_losses)
       gen_batch_val_loss_history.extend(training_history.epochwise_val_losses)
 
    epoch_loss=np.mean(gen_batch_loss_history)
@@ -231,7 +231,7 @@ for epoch in range(num_epochs):
 
    epoch_val_loss=np.mean(gen_batch_val_loss_history)
    epochwise_val_loss_history.append(epoch_val_loss)
-   if epoch_val_loss<last_epoch_val_loss:
+   if epoch_val_loss<last_epoch_val_loss*0.9995:
       last_epoch_val_loss=epoch_val_loss
       count=0
    else:
@@ -242,25 +242,34 @@ for epoch in range(num_epochs):
       break
 
 
-logging.info(str(epochwise_loss_history))
-logging.info(str(batchwise_loss_history))
-
-
-
-logging.info(str(epochwise_val_loss_history))
+logging.info("Epochwise training loss history is : "+str(epochwise_loss_history))
+logging.info("        ")
+logging.info("        ")
+logging.info("*********************====================*************************")
+logging.info("*********************====================*************************")
+logging.info("*********************====================*************************")
+logging.info("        ")
+logging.info("        ")
+logging.info("Batchwise training loss history is : "+str(batchwise_loss_history))
+logging.info("        ")
+logging.info("        ")
+logging.info("*********************====================*************************")
+logging.info("*********************====================*************************")
+logging.info("*********************====================*************************")
+logging.info("        ")
+logging.info("        ")
+logging.info("Epochwise validation loss history is : "+str(epochwise_val_loss_history))
 
 
 
 #save the trained model
-autoencoder.save(os.environ['BASEDIR']+"/models/"+args.model_name+'.h5')
+autoencoder.save(os.environ['BASEDIR']+"/models/"+args.model_name+'_'+args.opt_name+'.h5')
 
-#testing
-logging.info("Current test set is made from "+str(len(test_data_list))+" files and has "+str(get_num_samples(test_data_list))+" examples")
-
-
-my_test_generator=batch_generator(500,test_data_list)
-for test_batch in my_test_generator:
-   loss=autoencoder.evaluate(test_batch,test_batch,batch_size=50)
-   logging.info(str(loss))
+with open(os.environ['BASEDIR']+"/models/"+args.model_name+'_'+args.opt_name+"_epochwise_loss.txt", "wb") as fp:   #Pickling
+   pickle.dump(epochwise_loss_history, fp)
+with open(os.environ['BASEDIR']+"/models/"+args.model_name+'_'+args.opt_name+"_batchwise_loss.txt", "wb") as fp:   #Pickling
+   pickle.dump(batchwise_loss_history, fp)
+with open(os.environ['BASEDIR']+"/models/"+args.model_name+'_'+args.opt_name+"_epochwise_val_loss.txt", "wb") as fp:   #Pickling
+   pickle.dump(batchwise_val_loss_history, fp)
 
 
