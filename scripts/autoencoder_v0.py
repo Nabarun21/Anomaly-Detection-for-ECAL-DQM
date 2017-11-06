@@ -1,10 +1,9 @@
 import numpy as np
 import os
 import h5py
+import argparse
 
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
-logger = logging.getLogger(__name__)
 
 from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
 from keras.models import Model
@@ -13,9 +12,28 @@ from keras import backend as K
 from keras import callbacks
 from keras.utils import plot_model
 from keras import callbacks
+
 """ First fully running model to run on gpu: from here on we optimize"""
 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+      "--log_name",
+      action="store",
+      dest="log_name",
+      default="trial.log",
+      help="Name of the file where logs are written, will be created and saved in logs directory")
+parser.add_argument(
+      "--model_name",
+      action="store",
+      dest="model_name",
+      default="autoencoder",
+      help="name of the saved model, will be saved as a h5 file under the models directory")
 
+args = parser.parse_args()
+
+#logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s',filename=os.environ["BASEDIR"]+'/logs/'+args.log_name)
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s',filename=os.environ["BASEDIR"]+'/logs/'+args.log_name)
+logger = logging.getLogger(__name__)
 
 #helper fucntions
 
@@ -44,7 +62,9 @@ class train_histories(callbacks.Callback):
    def on_train_begin(self, logs={}):
       self.aucs = []
       self.epochwise_losses = []
+      self.epochwise_val_losses = []
       self.batchwise_losses = []
+
 
    def on_train_end(self, logs={}):
       return
@@ -54,6 +74,7 @@ class train_histories(callbacks.Callback):
 
    def on_epoch_end(self, epoch, logs={}):
       self.epochwise_losses.append(logs.get('loss'))
+      self.epochwise_val_losses.append(logs.get('val_loss'))
       return
 
    def on_batch_begin(self, batch, logs={}):
@@ -168,7 +189,7 @@ except KeyError:
    "Please cd into the module's base folder and run set_env from there."
    
 file_list=os.listdir(data_folder)
-train_data_list=file_list[0:3] #choosing 63 here keeps ~80% of data for testing, rest for training and val, need to automatize this
+train_data_list=file_list[0:1] #choosing 63 here keeps ~80% of data for testing, rest for training and val, need to automatize this
 test_data_list=file_list[63:64]
 
 
@@ -183,26 +204,35 @@ tensorboard=callbacks.TensorBoard(log_dir='../logs', histogram_freq=1, batch_siz
 training_history=train_histories()
       
 
-num_epochs=10
+num_epochs=3
 patience=3    #number of epochs where we see no improvement after which we stop training
-current_epoch_loss=1000   #arbitrarily large number
+last_epoch_val_loss=1000   #arbitrarily large number
 epochwise_loss_history=[]
 batchwise_loss_history=[]
+epochwise_val_loss_history=[]
+batchwise_val_loss_history=[]
 
 
 for epoch in range(num_epochs):
-   np.random.shuffle(train_data_list)
-   my_generator=batch_generator(300,train_data_list)
+#   np.random.shuffle(train_data_list)
+   my_generator=batch_generator(500,train_data_list)
    logging.info("Epoch no %s",epoch+1)
    gen_batch_loss_history=[]
+   gen_batch_val_loss_history=[]
    for batch in my_generator:
-      autoencoder.fit(batch,batch,epochs=1,batch_size=30,shuffle=True,validation_split=0.25,callbacks=[tensorboard,training_history,early_stopping])
+      autoencoder.fit(batch,batch,epochs=1,batch_size=50,shuffle=False,validation_split=0.25,callbacks=[training_history,early_stopping])
       batchwise_loss_history.extend(training_history.batchwise_losses)
       gen_batch_loss_history.extend(training_history.epochwise_losses)
+      batchwise_val_loss_history.extend(training_history.batchwise_val_losses)
+      gen_batch_val_loss_history.extend(training_history.epochwise_val_losses)
+
    epoch_loss=np.mean(gen_batch_loss_history)
-   epochwise_loss_history.extend(epoch_loss)
-   if epoch_loss<last_epoch_loss:
-      last_epoch_loss=epoch_loss
+   epochwise_loss_history.append(epoch_loss)
+
+   epoch_val_loss=np.mean(gen_batch_val_loss_history)
+   epochwise_val_loss_history.append(epoch_val_loss)
+   if epoch_val_loss<last_epoch_val_loss:
+      last_epoch_val_loss=epoch_val_loss
       count=0
    else:
       count+=1
@@ -212,21 +242,25 @@ for epoch in range(num_epochs):
       break
 
 
-print(epochwise_loss_history)
-print(batchwise_loss_history)
+logging.info(str(epochwise_loss_history))
+logging.info(str(batchwise_loss_history))
+
+
+
+logging.info(str(epochwise_val_loss_history))
+
 
 
 #save the trained model
-autoencoder.save("../models/autoencoder_v0.h5")
+autoencoder.save(os.environ['BASEDIR']+"/models/"+args.model_name+'.h5')
 
-#training
-
+#testing
 logging.info("Current test set is made from "+str(len(test_data_list))+" files and has "+str(get_num_samples(test_data_list))+" examples")
 
 
-my_test_generator=batch_generator(300,test_data_list)
+my_test_generator=batch_generator(500,test_data_list)
 for test_batch in my_test_generator:
-   loss=autoencoder.evaluate(test_batch,test_batch,batch_size=30)
-   print(loss)
+   loss=autoencoder.evaluate(test_batch,test_batch,batch_size=50)
+   logging.info(str(loss))
 
 
