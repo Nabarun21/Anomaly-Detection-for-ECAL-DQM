@@ -5,7 +5,7 @@
 #$ -m abe
 
 #$ -q gpu                # Specify queue
-#$ -l hostname="qa-1080ti-005"         # This job is just going to use one GPU card
+#$ -l hostname="qa-1080ti-002"         # This job is just going to use one GPU card
 #$ -N vhoose_optimizer               # Specify job name
 #$ -o sgeLogs            # Where to put the output
 
@@ -47,12 +47,7 @@ echo '==================================='
 cd /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/
 echo `pwd`
 source set_env.sh
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name adam --model_name autoencoder_v0>&test/train_adam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name nadam --model_name autoencoder_v0>&test/train_nadam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name adamax --model_name autoencoder_v0>&test/train_adamax.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name adagrad --model_name autoencoder_v0>&test/train_adagrad.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name rmsprop --model_name autoencoder_v0>&test/train_rmsprop.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name sgd --model_name autoencoder_v0>&test/train_sgd.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v1.py --opt_name adam --model_name autoencoder_v1>&test/train_v1_adam.log
 cd -
 echo '==================================='
 #ls -alh

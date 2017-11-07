@@ -15,26 +15,37 @@ from keras import callbacks
 from keras.utils import plot_model
 from keras import callbacks
 
-""" First fully running model to run on gpu: from here on we optimize"""
+""" v3: even more layers, yoohooo"""
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
       "--model_name",
       action="store",
       dest="model_name",
-      default="autoencoder",
+      default="autoencoder_v1",
       help="name of the saved model, will be saved as a h5 file under the models directory")
 parser.add_argument(
       "--opt_name",
       action="store",
       dest="opt_name",
-      default="adadelta",
+      default="adam",
       help="name of the optimizer to be used")
+parser.add_argument(
+      "--log_level",
+      action="store",
+      dest="log_level",
+      default="INFO",
+      help="logging level: INFO, DEBUG, WARNING etc.")
 
 args = parser.parse_args()
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s',filename=os.environ["BASEDIR"]+'/logs/'+args.model_name+'_'+args.opt_name+'.log')
-#logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s',filename=os.environ["BASEDIR"]+'/logs/'+args.log_name)
+logging_numeric_level = getattr(logging, args.log_level.upper(), None)
+
+if not isinstance(logging_numeric_level, int):
+    raise ValueError('Invalid log level: %s' % args.log_level)
+logging.basicConfig(level=logging_numeric_level, format='%(asctime)s %(levelname)s: %(message)s',filename=os.environ["BASEDIR"]+'/logs/'+args.model_name+'_'+args.opt_name+'.log')
+#logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
+
 logger = logging.getLogger(__name__)
 
 #helper fucntions
@@ -146,7 +157,7 @@ def batch_generator(batch_size,data_file_list):
 
       assert(ret_array.shape[0]==batch_size)
       num_batches_generated+=1
-      ret_array=np.reshape(ret_array,(len(ret_array),1,170,360))
+      ret_array=np.reshape(ret_array,(len(ret_array),1,image_height,image_width))
       yield ret_array
       
 
@@ -158,27 +169,47 @@ def batch_generator(batch_size,data_file_list):
 input_img=Input(shape=(1,170,360))
 
 #encoder
-encoder_layer_1=Conv2D(8,(3,3),activation='relu',padding='same',data_format='channels_first')(input_img)
+encoder_layer_1=Conv2D(16,(3,3),activation='relu',padding='same',data_format='channels_first')(input_img)
+logging.debug(str(encoder_layer_1.shape))
 encoder_layer_1_pooled=MaxPooling2D((2, 2), padding='same',data_format='channels_first')(encoder_layer_1)
+logging.debug(str(encoder_layer_1_pooled.shape))
 
+encoder_layer_2=Conv2D(16,(3,3),activation='relu',padding='same',data_format='channels_first')(encoder_layer_1_pooled)
+logging.debug(str(encoder_layer_2.shape))
 
-encoder_layer_2=Conv2D(8,(3,3),activation='relu',padding='same',data_format='channels_first')(encoder_layer_1_pooled)
-encoded_final=MaxPooling2D((5, 5), padding='same',data_format='channels_first')(encoder_layer_2)
+encoder_layer_3=Conv2D(8,(3,3),activation='relu',padding='same',data_format='channels_first')(encoder_layer_2)
+logging.debug(str(encoder_layer_3.shape))
 
+encoder_layer_4=Conv2D(8,(3,3),activation='relu',padding='same',data_format='channels_first')(encoder_layer_3)
+logging.debug(str(encoder_layer_4.shape))
+
+encoder_final=Conv2D(6,(3,3),activation='relu',padding='same',data_format='channels_first')(encoder_layer_4)
+logging.debug(str(encoder_final.shape))
 
 #decoder
-decoder_layer_1=Conv2D(8, (3, 3), activation='relu', padding='same',data_format='channels_first')(encoded_final)
-decoder_layer_1_upsampled=UpSampling2D((5, 5),data_format='channels_first')(decoder_layer_1)
+decoder_layer_1=Conv2D(6, (3, 3), activation='relu', padding='same',data_format='channels_first')(encoder_final)
+logging.debug(str(decoder_layer_1.shape))
+
+decoder_layer_2=Conv2D(8, (3, 3), activation='relu', padding='same',data_format='channels_first')(decoder_layer_1)
+logging.debug(str(decoder_layer_2.shape))
+
+decoder_layer_3=Conv2D(8, (3, 3), activation='relu', padding='same',data_format='channels_first')(decoder_layer_2)
+logging.debug(str(decoder_layer_3.shape))
+
+decoder_layer_4=Conv2D(16, (3, 3), activation='relu', padding='same',data_format='channels_first')(decoder_layer_3)
+logging.debug(str(decoder_layer_4.shape))
+
+decoder_layer_4_upsampled=UpSampling2D((2, 2),data_format='channels_first')(decoder_layer_4)
+logging.debug(str(decoder_layer_4_upsampled.shape))
 
 
-decoder_layer_2=Conv2D(8, (3, 3), activation='relu', padding='same',data_format='channels_first')(decoder_layer_1_upsampled)
-decoder_layer_2_upsampled=UpSampling2D((2, 2),data_format='channels_first')(decoder_layer_2)
+decoder_layer_5=Conv2D(16, (3, 3), activation='relu', padding='same',data_format='channels_first')(decoder_layer_4_upsampled)
+logging.debug(str(decoder_layer_5.shape))
 
+decoder_final=Conv2D(1,(4,4),activation='sigmoid',data_format='channels_first',padding='same')(decoder_layer_5)
+logging.debug(str(decoder_final.shape))
 
-decoded_final=Conv2D(1,(3,3),activation='sigmoid',data_format='channels_first',padding='same')(decoder_layer_2_upsampled)
-
-
-autoencoder=Model(input_img, decoded_final)
+autoencoder=Model(input_img, decoder_final)
 autoencoder.compile(optimizer=args.opt_name, loss='binary_crossentropy')
 
 
@@ -217,12 +248,12 @@ batchwise_val_loss_history=[]
 
 for epoch in range(num_epochs):
    np.random.shuffle(train_data_list)
-   my_generator=batch_generator(600,train_data_list)
+   my_generator=batch_generator(400,train_data_list)
    logging.info("Epoch no %s",epoch+1)
    gen_batch_loss_history=[]
    gen_batch_val_loss_history=[]
    for batch in my_generator:
-      autoencoder.fit(batch,batch,epochs=1,batch_size=30,shuffle=False,validation_split=0.25,callbacks=[training_history,early_stopping])
+      autoencoder.fit(batch,batch,epochs=1,batch_size=20,shuffle=False,validation_split=0.25,callbacks=[training_history,early_stopping])
       batchwise_loss_history.extend(training_history.batchwise_losses)
       gen_batch_loss_history.extend(training_history.epochwise_losses)
       gen_batch_val_loss_history.extend(training_history.epochwise_val_losses)
