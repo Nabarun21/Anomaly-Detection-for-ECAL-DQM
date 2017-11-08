@@ -222,7 +222,7 @@ for epoch in range(num_epochs):
    gen_batch_loss_history=[]
    gen_batch_val_loss_history=[]
    for batch in my_generator:
-      autoencoder.fit(batch,batch,epochs=1,batch_size=30,shuffle=False,validation_split=0.25,callbacks=[training_history,early_stopping])
+      autoencoder.fit(batch,batch,epochs=1,batch_size=30,shuffle=True,validation_split=0.25,callbacks=[training_history,early_stopping])
       batchwise_loss_history.extend(training_history.batchwise_losses)
       gen_batch_loss_history.extend(training_history.epochwise_losses)
       gen_batch_val_loss_history.extend(training_history.epochwise_val_losses)

@@ -24,10 +24,10 @@ def plot_losses(loss_list,plot_dir,save_name='autoencoder_v0_adadelta',x_label='
     
     my_fig=plt.figure()
     ax=my_fig.add_subplot(111)
-
+    final_loss="final training loss: {:.3e}".format(min(loss_list))
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
-    ax.set_title(save_name+"_"+y_label+"_v_"+x_label)
+    figure_title=save_name+"_"+y_label+"_v_"+x_label
     if 'batch' in x_label:
         ax.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
     ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
@@ -39,7 +39,16 @@ def plot_losses(loss_list,plot_dir,save_name='autoencoder_v0_adadelta',x_label='
         ax.semilogx(x_list,loss_list)
     else:
         ax.plot(x_list,loss_list)
-    my_fig.savefig(plot_dir+'/'+save_name+"_"+y_label+"_v_"+x_label+".png")
+    plt.text(0.5, 1.08, figure_title,
+         horizontalalignment='center',
+         fontsize=15,
+         transform = ax.transAxes)
+    plt.text(0.72, 0.85, final_loss,
+         horizontalalignment='center',
+         fontsize=10,
+         transform = ax.transAxes)
+
+    my_fig.savefig(plot_dir+'/train_val_losses/'+save_name+"_"+y_label+"_v_"+x_label+".png")
 
 
 
@@ -48,8 +57,10 @@ basedir=os.environ['BASEDIR']
 if __name__=="__main__":
     with open(basedir+"/models/"+args.model_name+'_'+args.opt_name+"_epochwise_val_loss.txt", "r") as fp: 
         epoch_val_loss_list=pickle.load(fp)
+
     with open(basedir+"/models/"+args.model_name+'_'+args.opt_name+"_epochwise_loss.txt", "r") as fp: 
         epoch_loss_list=pickle.load(fp)
+
     with open(basedir+"/models/"+args.model_name+'_'+args.opt_name+"_batchwise_loss.txt", "r") as fp: 
         batchwise_loss_list=pickle.load(fp)
     

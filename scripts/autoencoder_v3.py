@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 
 def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy'):
    "picks samples out of a hdf file and return a numpy array"
-   data_folder=os.environ["DATA"]
+   global data_folder
    input_file=h5py.File(data_folder+"/"+file_name,'r')
    logging.debug("Loading data from file: "+file_name)
    ret_array=np.array((input_file[group]))
@@ -59,7 +59,7 @@ def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy'):
    
 def get_num_samples(file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy'):
    "returns total number of samples in a list of hdf files"
-   data_folder=os.environ["DATA"]
+   global data_folder
    total_count=0
    for filename in file_list:
       input_file=h5py.File(data_folder+"/"+filename,'r')
@@ -235,7 +235,7 @@ if __name__=='__main__':
       
 
     num_epochs=100
-    patience=5    #number of epochs where we see no improvement after which we stop training
+    patience=25    #number of epochs where we see no improvement after which we stop training
     last_epoch_val_loss=1000   #arbitrarily large number
     perc_decrease_per_epoch=0.05
     epochwise_loss_history=[]
