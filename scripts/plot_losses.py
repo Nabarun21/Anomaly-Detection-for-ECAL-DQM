@@ -45,7 +45,7 @@ def plot_losses(loss_list,plot_dir,save_name='autoencoder_v0_adadelta',x_label='
          transform = ax.transAxes)
     plt.text(0.72, 0.85, final_loss,
          horizontalalignment='center',
-         fontsize=10,
+         fontsize=13,
          transform = ax.transAxes)
 
     my_fig.savefig(plot_dir+'/train_val_losses/'+save_name+"_"+y_label+"_v_"+x_label+".png")

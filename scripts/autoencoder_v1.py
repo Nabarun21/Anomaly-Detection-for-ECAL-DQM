@@ -240,7 +240,7 @@ epochwise_loss_history=[]
 batchwise_loss_history=[]
 epochwise_val_loss_history=[]
 batchwise_val_loss_history=[]
-
+epoch_count=0
 
 for epoch in range(num_epochs):
    np.random.shuffle(train_data_list)
@@ -263,11 +263,11 @@ for epoch in range(num_epochs):
       logging.info("Validation loss hasn't decreased by more than "+str(perc_decrease_per_epoch))
       logging.info("      ")
       last_epoch_val_loss=epoch_val_loss
-      count=0
+      epoch_count=0
    else:
-      count+=1
-   assert(count<=patience)
-   if count==patience:
+      epoch_count+=1
+   assert(epoch_count<=patience)
+   if epoch_count==patience:
       logging.info("Stopping training:Loss hasn't decreased for last "+str(patience)+" epochs and I have run out of patience")
       break
 
