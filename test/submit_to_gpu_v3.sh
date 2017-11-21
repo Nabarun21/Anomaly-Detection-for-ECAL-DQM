@@ -5,7 +5,7 @@
 #$ -m abe
 
 #$ -q gpu                # Specify queue
-#$ -l hostname="qa-1080ti-004"         # This job is just going to use one GPU card
+#$ -l hostname="qa-1080ti-003"         # This job is just going to use one GPU card
 #$ -N final_arch               # Specify job name
 #$ -o sgeLogs            # Where to put the output
 
@@ -47,7 +47,7 @@ echo '==================================='
 cd /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/
 echo `pwd`
 source set_env.sh
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v3.py --opt_name adam --model_name autoencoder_v3>&test/train_v3_adam.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v3.py --opt_name adam --model_name autoencoder_v3_EE --img_type EE_OCC>&test/train_v3_adam_EE.log
 cd -
 echo '==================================='
 #ls -alh

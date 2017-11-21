@@ -39,6 +39,12 @@ parser.add_argument(
       dest="log_level",
       default="INFO",
       help="logging level: INFO, DEBUG, WARNING etc.")
+parser.add_argument(
+      "--img_type",
+      action="store",
+      dest="img_type",
+      default="EB_OCC",
+      help="which class of DQM images to train on,EB_OCC (barrel occupancy), EB_TIM (barrel timing), EE_OCC (endcap occupacncy) etc")
 
 args = parser.parse_args()
 
@@ -56,9 +62,9 @@ logger = logging.getLogger(__name__)
 
 #helper fucntions
 
-def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy'):
+def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good'):
    "picks samples out of a hdf file and return a numpy array"
-   data_folder=os.environ["DATA"]
+   data_folder=os.environ["DATA"].replace("good",data_type)
    input_file=h5py.File(data_folder+"/"+file_name,'r')
    logging.debug("Loading data from file: "+file_name)
    ret_array=np.array((input_file[group]))
@@ -105,7 +111,7 @@ class train_histories(callbacks.Callback):
 
 
 #generator
-def batch_generator(batch_size,data_file_list):
+def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good'):
    """ generates batch_size images, well thats's obvious. throws exception when data runs out"""
    if batch_size<=0 or not isinstance(batch_size,int):
       logging.error("Batch size needs to be an integer greater than 0")
@@ -113,7 +119,7 @@ def batch_generator(batch_size,data_file_list):
    
 
    file_index=0
-   leftover_array=get_data(data_file_list[file_index]) #start off with the first data file
+   leftover_array=get_data(data_file_list[file_index],group,data_type) #start off with the first data file
    image_height=leftover_array.shape[1]
    image_width=leftover_array.shape[2]
 
@@ -133,7 +139,7 @@ def batch_generator(batch_size,data_file_list):
             logging.debug("Current/leftover batch doesn't have enough samples, loading new file")
             file_index+=1
             try:
-               new_array=get_data(data_file_list[file_index])
+               new_array=get_data(data_file_list[file_index],group,data_type)
             except IndexError as exc:
                if num_batches_generated>0:
                   logging.info("Ran out of data, can't suppy more images to the model, "+str(exc)+". Supplied "+str(num_batches_generated)+" batches")
@@ -170,9 +176,36 @@ def batch_generator(batch_size,data_file_list):
 
 if __name__=='__main__':
 
-    #first the model
+    #get the data
+    try:
+        data_folder=os.environ["DATA"]
+    except KeyError:
+        "Please cd into the module's base folder and run set_env from there."
+   
+    file_list=os.listdir(data_folder)
+    train_data_list=file_list[0:63] #choosing 63 here keeps ~80% of data for testing, rest for training and val, need to automatize this
+    test_data_list=file_list[63:]
 
-    input_img=Input(shape=(1,170,360))
+    logging.debug("Current file list is "+str(file_list)+" and has "+str(len(file_list))+" files")
+
+    if 'EB' in args.img_type.upper():
+        image_type=os.environ[args.img_type]
+    elif 'TIM' in args.img_type.upper():
+        image_type=os.environ['EEP_TIM']
+        image_type2=os.environ['EEM_TIM']
+    else:
+        image_type=os.environ['EEP_OCC']
+        image_type_eem=os.environ['EEM_OCC']
+
+
+    #get input image shape
+    (_,image_height,image_width)=get_data(file_list[0],image_type).shape
+
+    
+
+    #load or build the model
+
+    input_img=Input(shape=(1,image_height,image_width))
 
     #encoder
     encoder_layer_1=Conv2D(16,(3,3),activation='relu',padding='same',data_format='channels_first')(input_img)
@@ -208,29 +241,22 @@ if __name__=='__main__':
     decoder_layer_4=Conv2D(16, (3, 3), activation='relu', padding='same',data_format='channels_first')(decoder_layer_3_upsampled)
     logging.debug(str(decoder_layer_4.shape))
 
-    decoder_final=Conv2D(1,(3,1),activation='sigmoid',data_format='channels_first',padding='valid')(decoder_layer_4)
-    logging.debug(str(decoder_final.shape))
+    if 'EB' in args.img_type.upper(): 
+        decoder_final=Conv2D(1,(3,1),activation='sigmoid',data_format='channels_first',padding='valid')(decoder_layer_4)
+        logging.debug(str(decoder_final.shape))
+    else:
+        decoder_final=Conv2D(1,(3,3),activation='sigmoid',data_format='channels_first',padding='same')(decoder_layer_4)
+        logging.debug(str(decoder_final.shape))
     
     autoencoder=Model(input_img, decoder_final)
     autoencoder.compile(optimizer=args.opt_name, loss='binary_crossentropy')
 
 
 
-    #get the data
-    try:
-        data_folder=os.environ["DATA"]
-    except KeyError:
-        "Please cd into the module's base folder and run set_env from there."
-   
-    file_list=os.listdir(data_folder)
-    train_data_list=file_list[0:63] #choosing 63 here keeps ~80% of data for testing, rest for training and val, need to automatize this
-    test_data_list=file_list[63:]
-
-
-    logging.debug("Current file list is "+str(file_list)+" and has "+str(len(file_list))+" files")
-
     #start training
-    logging.info("Current training set is made from "+str(len(train_data_list))+" files and has "+str(get_num_samples(train_data_list))+" examples")
+    logging.info("Training with "+image_type+" images")
+    logging.info("Current training set is made from "+str(len(train_data_list))+" files and has "+str(get_num_samples(train_data_list,image_type))+" examples")
+
 
 
     early_stopping = callbacks.EarlyStopping(monitor='val_loss', patience=3) # Well this is sorta useless here, since nb epochs is actually set to 1 in model.fit and the number of epochs here is the number of time the outer loop runs
@@ -247,18 +273,30 @@ if __name__=='__main__':
     epochwise_val_loss_history=[]
     batchwise_val_loss_history=[]
     epoch_count=0
+    
 
     for epoch in range(num_epochs):
 #        np.random.shuffle(train_data_list)
-        my_generator=batch_generator(400,train_data_list)
         logging.info("Epoch no %s",epoch+1)
+        my_generator=batch_generator(400,train_data_list,image_type)
         gen_batch_loss_history=[]
         gen_batch_val_loss_history=[]
+
+        logging.info("Training on EB or EE+ images")
         for batch in my_generator:
             autoencoder.fit(batch,batch,epochs=1,batch_size=30,shuffle=True,validation_split=0.25,callbacks=[training_history,early_stopping])
             batchwise_loss_history.extend(training_history.batchwise_losses)
             gen_batch_loss_history.extend(training_history.epochwise_losses)
             gen_batch_val_loss_history.extend(training_history.epochwise_val_losses)
+        if 'EB' not in args.img_type.upper():
+            logging.info("Training on EE- images")
+            my_generator_eem=batch_generator(400,train_data_list,image_type_eem)
+            for batch_eem in my_generator_eem:
+                autoencoder.fit(batch_eem,batch_eem,epochs=1,batch_size=30,shuffle=True,validation_split=0.25,callbacks=[training_history,early_stopping])
+                batchwise_loss_history.extend(training_history.batchwise_losses)
+                gen_batch_loss_history.extend(training_history.epochwise_losses)
+                gen_batch_val_loss_history.extend(training_history.epochwise_val_losses)
+
 
         epoch_loss=np.mean(gen_batch_loss_history)
         epochwise_loss_history.append(epoch_loss)
