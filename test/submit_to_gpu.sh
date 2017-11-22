@@ -5,8 +5,8 @@
 #$ -m abe
 
 #$ -q gpu                # Specify queue
-#$ -l hostname="qa-1080ti-005"         # This job is just going to use one GPU card
-#$ -N vhoose_optimizer               # Specify job name
+#$ -l hostname="qa-1080ti-001"         # This job is just going to use one GPU card
+#$ -N choose_loss               # Specify job name
 #$ -o sgeLogs            # Where to put the output
 
 # Since UGE doesn't have the nice submit file format from HTCondor, we have to define our possible jobs here
@@ -47,12 +47,12 @@ echo '==================================='
 cd /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/
 echo `pwd`
 source set_env.sh
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name adam --model_name autoencoder_v0>&test/train_adam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name nadam --model_name autoencoder_v0>&test/train_nadam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name adamax --model_name autoencoder_v0>&test/train_adamax.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name adagrad --model_name autoencoder_v0>&test/train_adagrad.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name rmsprop --model_name autoencoder_v0>&test/train_rmsprop.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name sgd --model_name autoencoder_v0>&test/train_sgd.log
+
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v01.py --opt_name adam --model_name autoencoder_v01>&train_01.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v02.py --opt_name adam --model_name autoencoder_v02>&train_02.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v03.py --opt_name adam --model_name autoencoder_v03>&train_03.log
+
+
 cd -
 echo '==================================='
 #ls -alh
