@@ -20,7 +20,7 @@ parser.add_argument(
 
 args=parser.parse_args()
 def plot_losses(loss_list,plot_dir,save_name='autoencoder_v0_adadelta',x_label='epoch',y_label='validation_loss',is_xlog=False,is_ylog=False):
-    x_list=range(2,len(loss_list)+2)
+    x_list=range(1,len(loss_list)+1)
     
     my_fig=plt.figure()
     ax=my_fig.add_subplot(111)
@@ -65,7 +65,7 @@ if __name__=="__main__":
         batchwise_loss_list=pickle.load(fp)
     
         
-    plot_losses(epoch_val_loss_list[1:],basedir+'/plots',save_name=args.model_name+'_'+args.opt_name,is_ylog=False)
-    plot_losses(epoch_loss_list[1:],basedir+'/plots',save_name=args.model_name+'_'+args.opt_name,is_ylog=False,y_label='training_loss')
+    plot_losses(epoch_val_loss_list[0:],basedir+'/plots',save_name=args.model_name+'_'+args.opt_name,is_ylog=False)
+    plot_losses(epoch_loss_list[0:],basedir+'/plots',save_name=args.model_name+'_'+args.opt_name,is_ylog=False,y_label='training_loss')
     plot_losses(batchwise_loss_list[100:],basedir+'/plots',save_name=args.model_name+'_'+args.opt_name+'_loglog',is_ylog=True,is_xlog=True,x_label='batch',y_label='training_loss')
     plot_losses(batchwise_loss_list[100:],basedir+'/plots',save_name=args.model_name+'_'+args.opt_name,is_xlog=True,x_label='batch',y_label='training_loss')

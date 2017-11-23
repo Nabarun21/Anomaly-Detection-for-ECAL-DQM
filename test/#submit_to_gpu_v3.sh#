@@ -48,10 +48,10 @@ cd /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/
 echo `pwd`
 source set_env.sh
 
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name adam --model_name autoencoder_v0_maxnorm >&test/train_v0_adam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v01.py --opt_name adam --model_name autoencoder_v01 >&test/train_v01_adam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v02.py --opt_name adam --model_name autoencoder_v02 >&test/train_v02_adam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v03.py --opt_name adam --model_name autoencoder_v03 >&test/train_v03_adam.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name adam --model_name autoencoder_v0_maxnorm --img_type EB_OCC>&test/train_v0_adam.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v01.py --opt_name adam --model_name autoencoder_v01 --img_type EB_OCC>&test/train_v01_adam.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v02.py --opt_name adam --model_name autoencoder_v02 --img_type EB_OCC>&test/train_v02_adam.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v03.py --opt_name adam --model_name autoencoder_v03 --img_type EB_OCC>&test/train_v03_adam.log
 
 
 

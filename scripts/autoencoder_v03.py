@@ -205,10 +205,10 @@ tensorboard=callbacks.TensorBoard(log_dir='../logs', histogram_freq=1, batch_siz
 training_history=train_histories()
       
 
-num_epochs=100
+num_epochs=10
 patience=3    #number of epochs where we see no improvement after which we stop training
 last_epoch_val_loss=1000   #arbitrarily large number
-perc_decrease_per_epoch=0.1
+perc_decrease_per_epoch=10
 epochwise_loss_history=[]
 batchwise_loss_history=[]
 epochwise_val_loss_history=[]

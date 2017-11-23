@@ -264,10 +264,10 @@ if __name__=='__main__':
     training_history=train_histories()
       
 
-    num_epochs=100
-    patience=10    #number of epochs where we see no improvement after which we stop training
+    num_epochs=10
+    patience=3    #number of epochs where we see no improvement after which we stop training
     last_epoch_val_loss=1000   #arbitrarily large number
-    perc_decrease_per_epoch=0.025
+    perc_decrease_per_epoch=10
     epochwise_loss_history=[]
     batchwise_loss_history=[]
     epochwise_val_loss_history=[]
