@@ -140,3 +140,21 @@ def insert_hot_tower(input_image):
          to_ret[channel_y,channel_x]*=1e4 #a very large number representing a hot tower
 
    return to_ret
+
+
+def make_module_off(input_image):
+   to_ret=np.copy(input_image)
+
+   modules_off=2 if random.choice(range(10))<2 else 1 # 1 out of 10 times switch off two modules
+   height_range=range(0,to_ret.shape[0],85)
+   width_range=range(0,to_ret.shape[1],20)
+
+   for dummy in range(modules_off):
+      y_cord=random.choice(height_range)#pick random y for a towers lower left point
+      x_cord=random.choice(width_range)#pick random x ---do---
+
+      for channel_y in range(y_cord,y_cord+85):
+         for channel_x in range(x_cord,x_cord+20):
+            to_ret[channel_y,channel_x]=0 #a very large number representing a hot tower
+
+   return to_ret
