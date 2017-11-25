@@ -6,7 +6,7 @@
 
 #$ -q gpu                # Specify queue
 #$ -l hostname="qa-1080ti-007"         # This job is just going to use one GPU card
-#$ -N choose_loss               # Specify job name
+#$ -N choose_architecture               # Specify job name
 #$ -o sgeLogs            # Where to put the output
 
 # Since UGE doesn't have the nice submit file format from HTCondor, we have to define our possible jobs here
@@ -47,15 +47,10 @@ echo '==================================='
 cd /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/
 echo `pwd`
 source set_env.sh
-
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name adam --model_name autoencoder_v0_maxnorm --img_type EB_OCC>&test/train_v0_adam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v01.py --opt_name adam --model_name autoencoder_v01 --img_type EB_OCC>&test/train_v01_adam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v02.py --opt_name adam --model_name autoencoder_v02 --img_type EB_OCC>&test/train_v02_adam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v03.py --opt_name adam --model_name autoencoder_v03 --img_type EB_OCC>&test/train_v03_adam.log
-
-
-
-
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v3.py --model_name autoencoder_v3_EE --img_type EE_OCC >&test/train_v3_EE.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v31.py --model_name autoencoder_v31_EE --img_type EE_OCC >&test/train_v31_EE.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v32.py --model_name autoencoder_v32_EE --img_type EE_OCC >&test/train_v32_EE.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v33.py --model_name autoencoder_v33_EE --img_type EE_OCC >&test/train_v33_EE.log
 
 cd -
 echo '==================================='

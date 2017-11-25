@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 #helper fucntions
 
-def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good'):
+def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good_2016'):
    "picks samples out of a hdf file and return a numpy array"
-   data_folder=os.environ["DATA"].replace("good",data_type)
+   data_folder=os.environ["DATA"].replace("good_2016",data_type)
    input_file=h5py.File(data_folder+"/"+file_name,'r')
    logging.debug("Loading data from file: "+file_name)
    ret_array=np.array((input_file[group]))
@@ -63,7 +63,7 @@ class train_histories(callbacks.Callback):
 
 
 #generator
-def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good'):
+def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good_2016'):
    """ generates batch_size images, well thats's obvious. throws exception when data runs out"""
    if batch_size<=0 or not isinstance(batch_size,int):
       logging.error("Batch size needs to be an integer greater than 0")

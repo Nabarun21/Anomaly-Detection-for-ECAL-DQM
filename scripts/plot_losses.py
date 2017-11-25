@@ -17,6 +17,12 @@ parser.add_argument(
       dest="opt_name",
       default="adadelta",
       help="name of the optimizer used")
+parser.add_argument(
+      "--loss_name",
+      action="store",
+      dest="loss_name",
+      default="MSE",
+      help="name of the optimizer used")
 
 args=parser.parse_args()
 def plot_losses(loss_list,plot_dir,save_name='autoencoder_v0_adadelta',x_label='epoch',y_label='validation_loss',is_xlog=False,is_ylog=False):
@@ -55,17 +61,17 @@ def plot_losses(loss_list,plot_dir,save_name='autoencoder_v0_adadelta',x_label='
 basedir=os.environ['BASEDIR']
 
 if __name__=="__main__":
-    with open(basedir+"/models/"+args.model_name+'_'+args.opt_name+"_epochwise_val_loss.txt", "r") as fp: 
+    with open(basedir+"/models/"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+"_epochwise_val_loss.txt", "r") as fp: 
         epoch_val_loss_list=pickle.load(fp)
 
-    with open(basedir+"/models/"+args.model_name+'_'+args.opt_name+"_epochwise_loss.txt", "r") as fp: 
+    with open(basedir+"/models/"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+"_epochwise_loss.txt", "r") as fp: 
         epoch_loss_list=pickle.load(fp)
 
-    with open(basedir+"/models/"+args.model_name+'_'+args.opt_name+"_batchwise_loss.txt", "r") as fp: 
+    with open(basedir+"/models/"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+"_batchwise_loss.txt", "r") as fp: 
         batchwise_loss_list=pickle.load(fp)
     
         
-    plot_losses(epoch_val_loss_list[0:],basedir+'/plots',save_name=args.model_name+'_'+args.opt_name,is_ylog=False)
-    plot_losses(epoch_loss_list[0:],basedir+'/plots',save_name=args.model_name+'_'+args.opt_name,is_ylog=False,y_label='training_loss')
-    plot_losses(batchwise_loss_list[100:],basedir+'/plots',save_name=args.model_name+'_'+args.opt_name+'_loglog',is_ylog=True,is_xlog=True,x_label='batch',y_label='training_loss')
-    plot_losses(batchwise_loss_list[100:],basedir+'/plots',save_name=args.model_name+'_'+args.opt_name,is_xlog=True,x_label='batch',y_label='training_loss')
+    plot_losses(epoch_val_loss_list[0:],basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name,is_ylog=False)
+    plot_losses(epoch_loss_list[0:],basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name,is_ylog=False,y_label='training_loss')
+    plot_losses(batchwise_loss_list[100:],basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name+'_loglog',is_ylog=True,is_xlog=True,x_label='batch',y_label='training_loss')
+    plot_losses(batchwise_loss_list[100:],basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name,is_xlog=True,x_label='batch',y_label='training_loss')

@@ -5,7 +5,7 @@
 #$ -m abe
 
 #$ -q gpu                # Specify queue
-#$ -l hostname="qa-1080ti-007"         # This job is just going to use one GPU card
+#$ -l hostname="qa-1080ti-002"         # This job is just going to use one GPU card
 #$ -N choose_loss               # Specify job name
 #$ -o sgeLogs            # Where to put the output
 
@@ -48,10 +48,18 @@ cd /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/
 echo `pwd`
 source set_env.sh
 
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v0.py --opt_name adam --model_name autoencoder_v0_maxnorm >&test/train_v0_adam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v01.py --opt_name adam --model_name autoencoder_v01 >&test/train_v01_adam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v02.py --opt_name adam --model_name autoencoder_v02 >&test/train_v02_adam.log
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v03.py --opt_name adam --model_name autoencoder_v03 >&test/train_v03_adam.log
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v4.py --opt_name adam --model_name autoencoder_v4 
+
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v4.py --loss_name logcosh --opt_name adam --model_name autoencoder_v4 
+
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v4.py --loss_name binary_crossentropy --opt_name adam --model_name autoencoder_v4 
+
+
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v5.py --opt_name adam --model_name autoencoder_v5 
+
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v5.py --loss_name logcosh --opt_name adam --model_name autoencoder_v5 
+
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v5.py --loss_name binary_crossentropy --opt_name adam --model_name autoencoder_v5 
 
 
 
