@@ -18,13 +18,14 @@ hist_list=['EBOccupancyTask/EBOT rec hit occupancy']#,'EBTimingTask/EBTMT timing
 for run in run_list:
     X={}
     for hist_name in hist_list:
-        data_sample=helpers.get_data("ECAL_rechit_occ_time_"+str(run)+".hdf5",data_type='good',group=clean_name(hist_name))
+        data_sample=helpers.get_data("ECAL_rechit_occ_time_"+str(run)+".hdf5",data_type='good_2016',group=clean_name(hist_name))
     
         for lumisec in range(len(data_sample)):
             if lumisec%20!=0:continue
             input_image=data_sample[lumisec,:]
 
             out_sample=helpers.insert_hot_tower(input_image)
+            print(np.max(out_sample))
             
             out_sample=np.reshape(out_sample,(1,out_sample.shape[0],out_sample.shape[1]))
         
@@ -38,12 +39,12 @@ for run in run_list:
     [h.create_dataset(name, data=data, compression='lzf') for (name, data) in X.iteritems()] # for Python2.x                                                  
 #    [h.create_dataset(name, data=data, compression='lzf') for (name, data) in X.items()] # for Python3.x         
     
-
+"""
 #create bad data with missing modules
 for run in run_list:
     X={}
     for hist_name in hist_list:
-        data_sample=helpers.get_data("ECAL_rechit_occ_time_"+str(run)+".hdf5",data_type='good',group=clean_name(hist_name))
+        data_sample=helpers.get_data("ECAL_rechit_occ_time_"+str(run)+".hdf5",data_type='good_2016',group=clean_name(hist_name))
     
         for lumisec in range(len(data_sample)):
             if lumisec%50!=0:continue
@@ -62,3 +63,4 @@ for run in run_list:
     [h.create_dataset(name, data=data, compression='lzf') for (name, data) in X.iteritems()] # for Python2.x                                                  
 #    [h.create_dataset(name, data=data, compression='lzf') for (name, data) in X.items()] # for Python3.x         
 
+"""

@@ -139,6 +139,8 @@ def insert_hot_tower(input_image):
       for channel_x in range(x_cord,x_cord+5):
          to_ret[channel_y,channel_x]*=1e4 #a very large number representing a hot tower
 
+   to_ret_max=np.amax(to_ret)
+   to_ret=to_ret/float(to_ret_max)      #renormalize
    return to_ret
 
 

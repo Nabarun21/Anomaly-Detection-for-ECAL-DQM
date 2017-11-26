@@ -44,7 +44,6 @@ def plot_loss_as_metric(loss_list,plot_dir,save_name='autoencoder_v0_adadelta',i
 
     if train_test=='train':
         assert(anomalous_loss_list==None,"This is training loss plotting and we do not train with bad examples")
-
     
     my_fig=plt.figure()
     ax=my_fig.add_subplot(111)
@@ -155,7 +154,7 @@ if __name__=="__main__":
 
     basedir=os.environ['BASEDIR']
 
-    trained_model=models.load_model(basedir+"/models/"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+'.h5') #load model
+    trained_model=models.load_model(basedir+"/models/"+args.model_name+'_'+args.opt_name+'.h5') #load model
 
 
     image_type=os.environ['EB_OCC']
@@ -176,17 +175,17 @@ if __name__=="__main__":
     #print(anomalous_test_data_list_natural)
  #   print(anomalous_test_data_list_artificial_hot_towers)
   #  print(anomalous_test_data_list_artificial_missing_modules)
-    """
+     
     print("Current training set is made from "+str(len(train_data_list))+" files and has "+str(helper_functions.get_num_samples(train_data_list))+" examples")
-
+    """
     my_training_data_generator=helper_functions.batch_generator(4,train_data_list,image_type)
     
     training_losses=[]
     for  batch in my_training_data_generator:
         loss=trained_model.evaluate(batch,batch,batch_size=4,verbose=0)
         training_losses.append(loss)
-    
     """
+    
     print("Current test set is made from "+str(len(test_data_list))+" files and has "+str(helper_functions.get_num_samples(test_data_list))+" examples")
     my_test_data_generator=helper_functions.batch_generator(4,test_data_list,image_type)
 
@@ -220,13 +219,12 @@ if __name__=="__main__":
 
    
 
-#    plot_loss_as_metric(training_losses,basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name,is_ylog=False)
-    plot_loss_as_metric(test_losses,basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name+'_hot_towers',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_hot_towers)
-    plot_loss_as_metric(test_losses,basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name+'_missing_modules',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_missing_modules)
-    plot_loss_as_metric(test_losses,basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name,is_ylog=True,train_test='test',anomalous_loss_list=anomalous_test_losses_natural)
+#    plot_loss_as_metric(training_losses,basedir+'/plots',save_name=args.model_name+'_'+args.opt_name,is_ylog=False)
+    plot_loss_as_metric(test_losses,basedir+'/plots',save_name=args.model_name+'_'+args.opt_name+'_hot_towers',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_hot_towers)
+    plot_loss_as_metric(test_losses,basedir+'/plots',save_name=args.model_name+'_'+args.opt_name+'_missing_modules',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_missing_modules)
+    plot_loss_as_metric(test_losses,basedir+'/plots',save_name=args.model_name+'_'+args.opt_name,is_ylog=True,train_test='test',anomalous_loss_list=anomalous_test_losses_natural)
     
-    plot_loss_scatter(test_losses,basedir+'/plots',save_name="scatter_"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+'_hot_towers',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_hot_towers)
-    plot_loss_scatter(test_losses,basedir+'/plots',save_name="scatter_"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+'_missing_modules',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_missing_modules)
-    plot_loss_scatter(test_losses,basedir+'/plots',save_name="scatter_"+args.model_name+'_'+args.loss_name+'_'+args.opt_name,is_ylog=True,train_test='test',anomalous_loss_list=anomalous_test_losses_natural)
-    
+    plot_loss_scatter(test_losses,basedir+'/plots',save_name="scatter_"+args.model_name+'_'+args.opt_name+'_hot_towers',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_hot_towers)
+    plot_loss_scatter(test_losses,basedir+'/plots',save_name="scatter_"+args.model_name+'_'+args.opt_name+'_missing_modules',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_missing_modules)
+    plot_loss_scatter(test_losses,basedir+'/plots',save_name="scatter_"+args.model_name+'_'+args.opt_name,is_ylog=True,train_test='test',anomalous_loss_list=anomalous_test_losses_natural)
     
