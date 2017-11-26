@@ -223,7 +223,7 @@ if __name__=="__main__":
 #    plot_loss_as_metric(training_losses,basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name,is_ylog=False)
     plot_loss_as_metric(test_losses,basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name+'_hot_towers',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_hot_towers)
     plot_loss_as_metric(test_losses,basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name+'_missing_modules',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_missing_modules)
-    plot_loss_as_metric(test_losses,basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name,is_ylog=True,train_test='test',anomalous_loss_list=anomalous_test_losses_natural)
+    plot_loss_as_metric(test_losses,basedir+'/plots',save_name=args.model_name+'_'+args.loss_name+'_'+args.opt_name,is_ylog=True,train_test='test',anomalous_loss_list=None)
     
     plot_loss_scatter(test_losses,basedir+'/plots',save_name="scatter_"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+'_hot_towers',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_hot_towers)
     plot_loss_scatter(test_losses,basedir+'/plots',save_name="scatter_"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+'_missing_modules',is_ylog=False,train_test='test',anomalous_loss_list=anomalous_test_losses_artificial_missing_modules)
