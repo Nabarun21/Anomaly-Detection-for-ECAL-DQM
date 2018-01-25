@@ -3,7 +3,7 @@
 
 export BASEDIR=`pwd`
 
-export DATA=`pwd`"/data_maxnorm/good_2016"
+export DATA=`pwd`"/data/good_2016"
 
 export SCRIPTS=`pwd`"/scripts"
 
