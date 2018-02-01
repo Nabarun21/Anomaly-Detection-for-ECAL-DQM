@@ -1,46 +1,38 @@
 import numpy as np
-import pickle
 import os
 import h5py
-from keras import callbacks
-import random
+
 import logging
-
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
-#logging.basicConfig(level=logging_numeric_level, format='%(asctime)s %(levelname)s: %(message)s')
-
 logger = logging.getLogger(__name__)
+
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, UpSampling2D
+from keras.models import Model
+from keras import backend as K
+from keras import callbacks
+from keras.utils import plot_model
+from keras import callbacks
+""" This is the version 2  model, add callback functions"""
+
+
 
 #helper fucntions
 
-def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good_2016'):
-   "picks samples out of a hdf file and return a numpy array"
-   data_folder=os.environ["DATA"].replace("good_2016",data_type)
+def get_data(file_name):
+   global data_folder
    input_file=h5py.File(data_folder+"/"+file_name,'r')
    logging.debug("Loading data from file: "+file_name)
-   ret_array=np.array((input_file[group]))
+   ret_array=np.array((input_file['EBOccupancyTask_EBOT_rec_hit_occupancy']))
    logging.debug("Supplying "+str(ret_array.shape[0])+" samples")
    return ret_array
    
-def get_num_samples(file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy'):
-   "returns total number of samples in a list of hdf files"
-   data_folder=os.environ["DATA"]
-   total_count=0
-   for filename in file_list:
-      input_file=h5py.File(data_folder+"/"+filename,'r')
-      data=np.array((input_file[group]))
-      total_count+=data.shape[0]
-   return total_count
-
+#custom callback fucntions
 
 class train_histories(callbacks.Callback):
    def on_train_begin(self, logs={}):
       self.aucs = []
       self.epochwise_losses = []
-      self.epochwise_val_losses = []
       self.batchwise_losses = []
-
 
    def on_train_end(self, logs={}):
       return
@@ -50,7 +42,6 @@ class train_histories(callbacks.Callback):
 
    def on_epoch_end(self, epoch, logs={}):
       self.epochwise_losses.append(logs.get('loss'))
-      self.epochwise_val_losses.append(logs.get('val_loss'))
       return
 
    def on_batch_begin(self, batch, logs={}):
@@ -63,7 +54,7 @@ class train_histories(callbacks.Callback):
 
 
 #generator
-def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good_2016'):
+def batch_generator(batch_size,data_file_list):
    """ generates batch_size images, well thats's obvious. throws exception when data runs out"""
    if batch_size<=0 or not isinstance(batch_size,int):
       logging.error("Batch size needs to be an integer greater than 0")
@@ -71,7 +62,7 @@ def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hi
    
 
    file_index=0
-   leftover_array=get_data(data_file_list[file_index],group,data_type) #start off with the first data file
+   leftover_array=get_data(data_file_list[file_index]) #start off with the first data file
    image_height=leftover_array.shape[1]
    image_width=leftover_array.shape[2]
 
@@ -91,7 +82,7 @@ def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hi
             logging.debug("Current/leftover batch doesn't have enough samples, loading new file")
             file_index+=1
             try:
-               new_array=get_data(data_file_list[file_index],group,data_type)
+               new_array=get_data(data_file_list[file_index])
             except IndexError as exc:
                if num_batches_generated>0:
                   logging.info("Ran out of data, can't suppy more images to the model, "+str(exc)+". Supplied "+str(num_batches_generated)+" batches")
@@ -121,43 +112,81 @@ def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hi
 
       assert(ret_array.shape[0]==batch_size)
       num_batches_generated+=1
-      ret_array=np.reshape(ret_array,(len(ret_array),1,image_height,image_width))
-      ret_array*=10
+      ret_array=np.reshape(ret_array,(len(ret_array),1,170,360))
       yield ret_array
       
 
-#create anomalous images: random hot towers, only works for barrel, endcap has super complicated geometry
-def insert_hot_tower(input_image):
-   to_ret=np.copy(input_image)
-
-   height_range=range(0,to_ret.shape[0],5)
-   width_range=range(0,to_ret.shape[1],5)
-
-   y_cord=random.choice(height_range)#pick random y for a towers lower left point
-   x_cord=random.choice(width_range)#pick random x ---do---
-
-   for channel_y in range(y_cord,y_cord+5):
-      for channel_x in range(x_cord,x_cord+5):
-         to_ret[channel_y,channel_x]*=1e4 #a very large number representing a hot tower
-
-   to_ret_max=np.amax(to_ret)
-   to_ret=to_ret/float(to_ret_max)      #renormalize
-   return to_ret
 
 
-def make_module_off(input_image):
-   to_ret=np.copy(input_image)
 
-   modules_off=2 if random.choice(range(10))<2 else 1 # 1 out of 10 times switch off two modules
-   height_range=range(0,to_ret.shape[0],85)
-   width_range=range(0,to_ret.shape[1],20)
+#first the model
 
-   for dummy in range(modules_off):
-      y_cord=random.choice(height_range)#pick random y for a towers lower left point
-      x_cord=random.choice(width_range)#pick random x ---do---
+input_img=Input(shape=(1,170,360))
 
-      for channel_y in range(y_cord,y_cord+85):
-         for channel_x in range(x_cord,x_cord+20):
-            to_ret[channel_y,channel_x]=0 #a very large number representing a hot tower
+#encoder
+encoder_layer_1=Conv2D(8,(5,5),activation='relu',padding='same',data_format='channels_first')(input_img)
+encoder_layer_1_pooled=MaxPooling2D((2, 2), padding='same',data_format='channels_first')(encoder_layer_1)
 
-   return to_ret
+
+encoder_layer_2=Conv2D(8,(5,5),activation='relu',padding='same',data_format='channels_first')(encoder_layer_1_pooled)
+encoded_final=MaxPooling2D((5, 5), padding='same',data_format='channels_first')(encoder_layer_2)
+
+
+#decoder
+decoder_layer_1=Conv2D(8, (5, 5), activation='relu', padding='same',data_format='channels_first')(encoded_final)
+decoder_layer_1_upsampled=UpSampling2D((5, 5),data_format='channels_first')(decoder_layer_1)
+
+
+decoder_layer_2=Conv2D(8, (5, 5), activation='relu', padding='same',data_format='channels_first')(decoder_layer_1_upsampled)
+decoder_layer_2_upsampled=UpSampling2D((2, 2),data_format='channels_first')(decoder_layer_2)
+
+
+decoded_final=Conv2D(1,(5,5),activation='sigmoid',data_format='channels_first',padding='same')(decoder_layer_2_upsampled)
+
+
+autoencoder=Model(input_img, decoded_final)
+autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
+
+
+
+#get the data
+try:
+   data_folder=os.environ["DATA"]
+except KeyError:
+   "Please cd into the module's base folder and run set_env from there."
+   
+file_list=os.listdir(data_folder)
+train_data_list=file_list[0:2]
+test_data_list=file_list[63:64]
+
+
+logging.debug("Current file list is "+str(file_list)+" and has "+str(len(file_list))+" files")
+
+early_stopping = callbacks.EarlyStopping(monitor='val_loss', patience=3)
+tensorboard=callbacks.TensorBoard(log_dir='../logs', histogram_freq=1, batch_size=32, write_graph=True, write_grads=True, write_images=True, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
+training_history=train_histories()
+      
+
+num_epochs=1
+epochwise_loss_history=[]
+batchwise_loss_history=[]
+for epoch in range(num_epochs):
+   my_generator=batch_generator(300,train_data_list)
+   logging.info("Epoch no %s",epoch+1)
+   for batch in my_generator:
+      autoencoder.fit(batch,batch,epochs=1,batch_size=30,shuffle=True,validation_split=0.25,callbacks=[tensorboard,training_history,early_stopping])
+      batchwise_loss_history.extend(training_history.batchwise_losses)
+   epochwise_loss_history.extend(training_history.epochwise_losses)
+
+
+json_string = autoencoder.to_json()
+
+print(json_string)
+print(epochwise_loss_history)
+print(batchwise_loss_history)
+
+my_test_generator=batch_generator(300,test_data_list)
+for test_batch in my_test_generator:
+   loss=autoencoder.evaluate(test_batch,test_batch,batch_size=30)
+   print(loss)
+
