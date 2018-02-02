@@ -6,7 +6,7 @@ import os
 import keras.models as models
 import argparse
 import helpers as helper_functions
-
+import pickle
 
 """ plot loss histograms as metric"""
 
@@ -221,8 +221,8 @@ if __name__=="__main__":
 
 
 
-    test_metrics=[str(args.model_name),[y_true_test,y_predicted_test]]
-    training_metrics=[str(args.model_name),[y_true_train,y_predicted_train]]
+    test_results=[str(args.model_name),[y_true_test,y_predicted_test]]
+    training_results=[str(args.model_name),[y_true_train,y_predicted_train]]
 
     
     with open(os.environ['BASEDIR']+"/models/"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+"_for_metrics_testing.txt", "wb") as fp:   #Pickling
