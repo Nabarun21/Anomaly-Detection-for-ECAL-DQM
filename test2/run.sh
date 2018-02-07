@@ -5,7 +5,7 @@
 #$ -m abe
 
 #$ -q gpu                # Specify queue
-#$ -l hostname="qa-1080ti-002"         # This job is just going to use one GPU card
+#$ -l hostname="qa-1080ti-009"         # This job is just going to use one GPU card
 #$ -N choose_loss               # Specify job name
 #$ -o sgeLogs            # Where to put the output
 
@@ -48,13 +48,7 @@ cd /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/
 echo `pwd`
 source set_env.sh
 
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v8.py --model_name v8  --loss_name MSE 
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v7.py --model_name v7  --loss_name MSE 
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v6.py --model_name v6  --loss_name MSE 
-
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v8.py --model_name v8  --loss_name binary_crossentropy 
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v7.py --model_name v7  --loss_name binary_crossentropy 
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/autoencoder_v6.py --model_name v6  --loss_name binary_crossentropy 
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/model_v0.py --model_name v0  --loss_name binary_crossentropy --opt_name sgd 
 
 
 

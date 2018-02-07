@@ -9,7 +9,7 @@ parser.add_argument(
       "--model_name",
       action="store",
       dest="model_name",
-      default="autoencoder_v0",
+      default="model_v0",
       help="name of the saved model")
 parser.add_argument(
       "--opt_name",
