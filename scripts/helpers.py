@@ -122,7 +122,6 @@ def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hi
       assert(ret_array.shape[0]==batch_size)
       num_batches_generated+=1
       ret_array=np.reshape(ret_array,(len(ret_array),1,image_height,image_width))
-      ret_array*=10
       yield ret_array
       
 

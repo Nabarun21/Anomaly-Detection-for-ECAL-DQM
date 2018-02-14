@@ -5,9 +5,9 @@
 #$ -m abe
 
 #$ -q gpu                # Specify queue
-#$ -l hostname="qa-1080ti-008"         # This job is just going to use one GPU card
+#$ -l hostname="qa-1080ti-005"         # This job is just going to use one GPU card
 #$ -N choose_loss               # Specify job name
-#$ -o sgeLogs            # Where to put the output
+#$ -o sgeLogs14            # Where to put the output
 
 # Since UGE doesn't have the nice submit file format from HTCondor, we have to define our possible jobs here
 
@@ -48,9 +48,7 @@ cd /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/
 echo `pwd`
 source set_env.sh
 
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/model_v1.py --model_name v1  --loss_name binary_crossentropy --opt_name sgd 
-
-
+python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/model_v14.py --model_name v14  --loss_name binary_crossentropy --opt_name sgd 
 
 cd -
 echo '==================================='
