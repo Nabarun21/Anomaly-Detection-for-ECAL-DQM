@@ -13,6 +13,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(mes
 logger = logging.getLogger(__name__)
 
 #helper fucntions
+def normalize(a):
+    means=a.mean(axis=(1,2))
+    stds=a.std(axis=(1,2))
+    means=np.reshape(means,(a.shape[0],1,1))
+    stds=np.reshape(stds,(a.shape[0],1,1))
+    ret_array=a-means
+    ret_array=ret_array/stds
+    return ret_array
 
 def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good_2016'):
    "picks samples out of a hdf file and return a numpy array"
@@ -21,6 +29,7 @@ def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type=
    logging.debug("Loading data from file: "+file_name)
    ret_array=np.array((input_file[group]))
    logging.debug("Supplying "+str(ret_array.shape[0])+" samples")
+   ret_array=normalize(ret_array)
    return ret_array
    
 def get_num_samples(file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy'):
