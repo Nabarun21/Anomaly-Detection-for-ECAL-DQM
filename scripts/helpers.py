@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(mes
 logger = logging.getLogger(__name__)
 
 #helper fucntions
-def my_normalize(a):
+def normalize(a):
     means=a.mean(axis=(1,2))
     stds=a.std(axis=(1,2))
     means=np.reshape(means,(a.shape[0],1,1))
@@ -37,7 +37,7 @@ def preprocess(a,level=0):
         print("preprocessing level needs to be integer type or be able to be cast into integer type")
     if level==0:return a #so nothin
     if level==1:return max_abs_scale(a) #sigmoid +binary cross entropy or MSE
-    if level==2:return my_normalize(a) #linear +MSE
+    if level==2:return normalize(a) #linear +MSE
     if level==3:return max_abs_scale(normalize(a))#tanh +MSE
     if level==4:return max_abs_scale(np.log(a))#tanh +MSE
     
