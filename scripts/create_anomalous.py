@@ -21,11 +21,11 @@ for run in run_list:
         data_sample=helpers.get_data("ECAL_rechit_occ_time_"+str(run)+".hdf5",data_type='good_2016',group=clean_name(hist_name))
     
         for lumisec in range(len(data_sample)):
-            if lumisec%20!=0:continue
+            if lumisec%10!=0:continue
             input_image=data_sample[lumisec,:]
 
             out_sample=helpers.insert_hot_tower(input_image)
-            print(np.max(out_sample))
+#            print(np.max(out_sample))
             
             out_sample=np.reshape(out_sample,(1,out_sample.shape[0],out_sample.shape[1]))
         
@@ -35,11 +35,11 @@ for run in run_list:
             #print ('not creating but adding')
                 X[clean_name(hist_name)] = np.concatenate((X[clean_name(hist_name)],out_sample))
         
-    h = h5py.File('../data_maxnorm/bad_2016/hot_towers/ECAL_rechit_occ_time_'+str(run)+'.hdf5','w')
+    h = h5py.File('../data_nopreprocess/bad_2016/hot_towers/ECAL_rechit_occ_time_'+str(run)+'.hdf5','w')
     [h.create_dataset(name, data=data, compression='lzf') for (name, data) in X.iteritems()] # for Python2.x                                                  
 #    [h.create_dataset(name, data=data, compression='lzf') for (name, data) in X.items()] # for Python3.x         
     
-"""
+
 #create bad data with missing modules
 for run in run_list:
     X={}
@@ -47,7 +47,7 @@ for run in run_list:
         data_sample=helpers.get_data("ECAL_rechit_occ_time_"+str(run)+".hdf5",data_type='good_2016',group=clean_name(hist_name))
     
         for lumisec in range(len(data_sample)):
-            if lumisec%50!=0:continue
+            if lumisec%25!=0:continue
             input_image=data_sample[lumisec,:]
             out_sample=helpers.make_module_off(input_image)
             
@@ -59,8 +59,8 @@ for run in run_list:
             #print ('not creating but adding')
                 X[clean_name(hist_name)] = np.concatenate((X[clean_name(hist_name)],out_sample))
         
-    h = h5py.File('../data_maxnorm/bad_2016/missing_modules/ECAL_rechit_occ_time_'+str(run)+'.hdf5','w')
+    h = h5py.File('../data_nopreprocess/bad_2016/missing_modules/ECAL_rechit_occ_time_'+str(run)+'.hdf5','w')
     [h.create_dataset(name, data=data, compression='lzf') for (name, data) in X.iteritems()] # for Python2.x                                                  
 #    [h.create_dataset(name, data=data, compression='lzf') for (name, data) in X.items()] # for Python3.x         
 
-"""
+

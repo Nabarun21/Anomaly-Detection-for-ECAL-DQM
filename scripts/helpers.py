@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(mes
 logger = logging.getLogger(__name__)
 
 #helper fucntions
-def normalize(a):
+def my_normalize(a):
     means=a.mean(axis=(1,2))
     stds=a.std(axis=(1,2))
     means=np.reshape(means,(a.shape[0],1,1))
@@ -22,14 +22,33 @@ def normalize(a):
     ret_array=ret_array/stds
     return ret_array
 
-def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good_2016'):
+def max_abs_scale(a):
+    maxes=np.abs(a).max(axis=(1,2))
+    maxes=np.reshape(maxes,(a.shape[0],1,1))
+    ret_array=a/maxes
+    return ret_array
+
+
+def preprocess(a,level=0):
+    a[a==0]=1e-5
+    try:
+        level=int(level)
+    except TypeError:
+        print("preprocessing level needs to be integer type or be able to be cast into integer type")
+    if level==0:return a #so nothin
+    if level==1:return max_abs_scale(a) #sigmoid +binary cross entropy or MSE
+    if level==2:return my_normalize(a) #linear +MSE
+    if level==3:return max_abs_scale(normalize(a))#tanh +MSE
+    if level==4:return max_abs_scale(np.log(a))#tanh +MSE
+    
+def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good_2016',preprocess_level=0):
    "picks samples out of a hdf file and return a numpy array"
    data_folder=os.environ["DATA"].replace("good_2016",data_type)
    input_file=h5py.File(data_folder+"/"+file_name,'r')
    logging.debug("Loading data from file: "+file_name)
    ret_array=np.array((input_file[group]))
+   ret_array=preprocess(ret_array,preprocess_level)
    logging.debug("Supplying "+str(ret_array.shape[0])+" samples")
-   ret_array=normalize(ret_array)
    return ret_array
    
 def get_num_samples(file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy'):
@@ -72,7 +91,7 @@ class train_histories(callbacks.Callback):
 
 
 #generator
-def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good_2016'):
+def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type='good_2016',prep_level=0):
    """ generates batch_size images, well thats's obvious. throws exception when data runs out"""
    if batch_size<=0 or not isinstance(batch_size,int):
       logging.error("Batch size needs to be an integer greater than 0")
@@ -80,7 +99,7 @@ def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hi
    
 
    file_index=0
-   leftover_array=get_data(data_file_list[file_index],group,data_type) #start off with the first data file
+   leftover_array=get_data(data_file_list[file_index],group,data_type,prep_level) #start off with the first data file
    image_height=leftover_array.shape[1]
    image_width=leftover_array.shape[2]
 
@@ -100,7 +119,7 @@ def batch_generator(batch_size,data_file_list,group='EBOccupancyTask_EBOT_rec_hi
             logging.debug("Current/leftover batch doesn't have enough samples, loading new file")
             file_index+=1
             try:
-               new_array=get_data(data_file_list[file_index],group,data_type)
+               new_array=get_data(data_file_list[file_index],group,data_type,prep_level)
             except IndexError as exc:
                if num_batches_generated>0:
                   logging.info("Ran out of data, can't suppy more images to the model, "+str(exc)+". Supplied "+str(num_batches_generated)+" batches")
@@ -148,8 +167,8 @@ def insert_hot_tower(input_image):
       for channel_x in range(x_cord,x_cord+5):
          to_ret[channel_y,channel_x]*=1e4 #a very large number representing a hot tower
 
-   to_ret_max=np.amax(to_ret)
-   to_ret=to_ret/float(to_ret_max)      #renormalize
+#   to_ret_max=np.amax(to_ret)
+#   to_ret=to_ret/float(to_ret_max)      #renormalize
    return to_ret
 
 
@@ -166,6 +185,6 @@ def make_module_off(input_image):
 
       for channel_y in range(y_cord,y_cord+85):
          for channel_x in range(x_cord,x_cord+20):
-            to_ret[channel_y,channel_x]=0 #a very large number representing a hot tower
+            to_ret[channel_y,channel_x]=0 #0, module is off
 
    return to_ret

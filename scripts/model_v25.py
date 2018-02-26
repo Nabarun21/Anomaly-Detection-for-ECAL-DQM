@@ -95,7 +95,7 @@ def get_num_samples(file_list,group='EBOccupancyTask_EBOT_rec_hit_occupancy'):
       total_count+=data.shape[0]
    return total_count
 
-
+ 
 class train_histories(callbacks.Callback):
    def on_train_begin(self, logs={}):
       self.aucs = []
@@ -284,7 +284,7 @@ if __name__=='__main__':
     x=LeakyReLU(alpha=0.1)(x)
     logging.debug(str(x.shape))
 
-    decoded=Conv2D(1,(5,5),activation='sigmoid',padding='same',data_format='channels_first',use_bias=False)(x)
+    decoded=Conv2D(1,(5,5),activation='linear',padding='same',data_format='channels_first',use_bias=False)(x)
     logging.debug(str(x.shape))
 
     encoder=Model(input_img,encoded)
@@ -299,8 +299,8 @@ if __name__=='__main__':
 
 
 
-    early_stopping = callbacks.EarlyStopping(monitor='val_loss', patience=3) # Well this is sorta useless here, since nb epochs is actually set to 1 in model.fit and the number of epochs here is the number of time the outer loop runs
-    tensorboard=callbacks.TensorBoard(log_dir='../logs', histogram_freq=1, batch_size=32, write_graph=True, write_grads=True, write_images=True, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
+ #   early_stopping = callbacks.EarlyStopping(monitor='val_loss', patience=3) # Well this is sorta useless here, since nb epochs is actually set to 1 in model.fit and the number of epochs here is the number of time the outer loop runs
+#    tensorboard=callbacks.TensorBoard(log_dir='../logs', histogram_freq=1, batch_size=32, write_graph=True, write_grads=True, write_images=True, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
     training_history=train_histories()
       
 
@@ -332,7 +332,7 @@ if __name__=='__main__':
             except StopIteration:
                 my_val_generator=batch_generator(1000,val_data_list,image_type)
                 val_batch=my_val_generator.next()
-            autoencoder.fit(batch,batch,epochs=1,batch_size=200,shuffle=True,validation_data=(val_batch, val_batch),callbacks=[training_history,early_stopping,checkpoint])
+            autoencoder.fit(batch,batch,epochs=1,batch_size=200,shuffle=True,validation_data=(val_batch, val_batch),callbacks=[training_history,checkpoint])
             batchwise_loss_history.extend(training_history.batchwise_losses)
             gen_batch_loss_history.extend(training_history.epochwise_losses)
             gen_batch_val_loss_history.extend(training_history.epochwise_val_losses)
@@ -393,7 +393,7 @@ if __name__=='__main__':
 
     #save the trained model
     autoencoder.save(os.environ['BASEDIR']+"/models/model_"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+'.h5')
-    autoencoder.save(os.environ['BASEDIR']+"/models/encoder_"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+'.h5')
+    encoder.save(os.environ['BASEDIR']+"/models/encoder_"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+'.h5')
 
     with open(os.environ['BASEDIR']+"/models/"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+"_epochwise_loss.txt", "wb") as fp:   #Pickling
         pickle.dump(epochwise_loss_history, fp)

@@ -6,7 +6,7 @@ import os
 import keras.models as models
 import argparse
 import helpers as helper_functions
-
+import pickle
 
 """ plot loss histograms as metric"""
 
@@ -37,6 +37,13 @@ parser.add_argument(
       dest="log_level",
       default="INFO",
       help="logging level: INFO, DEBUG, WARNING etc.")
+parser.add_argument(
+      "--prep_level",
+      type=int,
+      action="store",
+      dest="prep_level",
+      default=0,
+      help="preprocessing type: 0- no preprocessing; 1- max_abs_scaled; 2-normalized to 0 mean and 1 std; 3- 2 followed by 1;4-log followed by max_abs_scaled")
 
 args = parser.parse_args()
 
@@ -55,16 +62,16 @@ def plot_loss_as_metric(loss_list,plot_dir,save_name='autoencoder_v0_adadelta',i
     x_max=np.mean(loss_list)+4.5*np.std(loss_list)
 
     if anomalous_loss_list:
-        print(anomalous_loss_list)
+#        print(anomalous_loss_list)
         x_max=max(max(loss_list),max(anomalous_loss_list))*1.01
         x_min=min(min(loss_list),min(anomalous_loss_list))*0.99
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     figure_title=save_name+"_"+train_test
     ax.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
-    if anomalous_loss_list:
-        print(min(anomalous_loss_list))
-        print(max(anomalous_loss_list))
+#    if anomalous_loss_list:
+ #       print(min(anomalous_loss_list))
+  #      print(max(anomalous_loss_list))
 
     if x_max/x_min>500 and anomalous_loss_list:
         plt.xscale('log')
@@ -179,7 +186,7 @@ if __name__=="__main__":
     
     print("Current training set is made from "+str(len(train_data_list))+" files and has "+str(helper_functions.get_num_samples(train_data_list))+" examples")
 
-    my_training_data_generator=helper_functions.batch_generator(4,train_data_list,image_type)
+    my_training_data_generator=helper_functions.batch_generator(4,train_data_list,group=image_type,prep_level=args.prep_level)
     
     training_losses=[]
     for  batch in my_training_data_generator:
@@ -188,7 +195,7 @@ if __name__=="__main__":
     
     
     print("Current test set is made from "+str(len(test_data_list))+" files and has "+str(helper_functions.get_num_samples(test_data_list))+" examples")
-    my_test_data_generator=helper_functions.batch_generator(4,test_data_list,image_type)
+    my_test_data_generator=helper_functions.batch_generator(4,test_data_list,group=image_type,prep_level=args.prep_level)
  
 
 
@@ -199,9 +206,9 @@ if __name__=="__main__":
         test_losses.append(loss)
 
     
-    my_anomalous_test_data_generator_natural=helper_functions.batch_generator(1,anomalous_test_data_list_natural,data_type='bad_2016',group=image_type)
-    my_anomalous_test_data_generator_artificial_hot_towers=helper_functions.batch_generator(1,anomalous_test_data_list_artificial_hot_towers,data_type='bad_2016/hot_towers',group=image_type)
-    my_anomalous_test_data_generator_artificial_missing_modules=helper_functions.batch_generator(1,anomalous_test_data_list_artificial_missing_modules,data_type='bad_2016/missing_modules',group=image_type)
+    my_anomalous_test_data_generator_natural=helper_functions.batch_generator(1,anomalous_test_data_list_natural,data_type='bad_2016',group=image_type,prep_level=args.prep_level)
+    my_anomalous_test_data_generator_artificial_hot_towers=helper_functions.batch_generator(1,anomalous_test_data_list_artificial_hot_towers,data_type='bad_2016/hot_towers',group=image_type,prep_level=args.prep_level)
+    my_anomalous_test_data_generator_artificial_missing_modules=helper_functions.batch_generator(1,anomalous_test_data_list_artificial_missing_modules,data_type='bad_2016/missing_modules',group=image_type,prep_level=args.prep_level)
 
     anomalous_test_losses_natural=[]
     anomalous_test_losses_artificial_missing_modules=[]
@@ -218,6 +225,13 @@ if __name__=="__main__":
     for  batch in my_anomalous_test_data_generator_artificial_missing_modules:
         loss=trained_model.evaluate(batch,batch,batch_size=1,verbose=0)
         anomalous_test_losses_artificial_missing_modules.append(loss)
+
+    with open(os.environ['BASEDIR']+"/loss_lists/"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+"_test_loss.txt", "wb") as fp:
+        pickle.dump(test_losses, fp)
+    with open(os.environ['BASEDIR']+"/loss_lists/"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+"_mm_loss.txt", "wb") as fp:
+        pickle.dump(anomalous_test_losses_artificial_missing_modules, fp)
+    with open(os.environ['BASEDIR']+"/loss_lists/"+args.model_name+'_'+args.loss_name+'_'+args.opt_name+"_ht_loss.txt", "wb") as fp:
+        pickle.dump(anomalous_test_losses_artificial_hot_towers, fp)
 
    
 

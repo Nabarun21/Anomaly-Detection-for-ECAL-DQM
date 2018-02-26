@@ -23,6 +23,12 @@ parser.add_argument(
       dest="loss_name",
       default="MSE",
       help="name of the optimizer used")
+parser.add_argument(
+      "--prep_level",
+      action="store",
+      dest="prep_level",
+      default=0,
+      help="preprocess-ng type")
 
 args=parser.parse_args()
 def plot_losses(loss_list,plot_dir,save_name='autoencoder_v0_adadelta',x_label='epoch',y_label='validation_loss',is_xlog=False,is_ylog=False):
