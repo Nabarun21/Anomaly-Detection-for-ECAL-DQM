@@ -62,7 +62,7 @@ def max_abs_scale(a):
 
 
 def preprocess(a,level=0):
-    a[a==0]=1e-5
+    a[a==0]=1e-10
     try:
         level=int(level)
     except TypeError:
@@ -80,7 +80,7 @@ def get_data(file_name,group='EBOccupancyTask_EBOT_rec_hit_occupancy',data_type=
    input_file=h5py.File(data_folder+"/"+file_name,'r')
    logging.debug("Loading data from file: "+file_name)
    ret_array=np.array((input_file[group]))
-   ret_array=preprocess(ret_array,preprocess_level)
+   ret_array=np.abs(preprocess(ret_array,preprocess_level))
    logging.debug("Supplying "+str(ret_array.shape[0])+" samples")
    return ret_array
    
