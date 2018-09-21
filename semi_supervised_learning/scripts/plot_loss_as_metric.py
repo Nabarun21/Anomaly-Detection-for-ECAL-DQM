@@ -191,29 +191,29 @@ if __name__=="__main__":
     
     print("Current training set is made from "+str(len(train_data_list))+" files and has "+str(helper_functions.get_num_samples(train_data_list))+" examples")
 
-    my_training_data_generator=helper_functions.batch_generator(4,train_data_list,group=image_type,prep_level=args.prep_level)
+    my_training_data_generator=helper_functions.batch_generator(1,train_data_list,group=image_type,prep_level=args.prep_level)
     
     training_losses=[]
     for  batch in my_training_data_generator:
-        loss=trained_model.evaluate(batch,batch,batch_size=4,verbose=0)
+        loss=trained_model.evaluate(batch,batch,batch_size=1,verbose=0)
         training_losses.append(loss)
     
     
     print("Current test set is made from "+str(len(test_data_list))+" files and has "+str(helper_functions.get_num_samples(test_data_list))+" examples")
-    my_test_data_generator=helper_functions.batch_generator(4,test_data_list,group=image_type,prep_level=args.prep_level)
+    my_test_data_generator=helper_functions.batch_generator(1,test_data_list,group=image_type,prep_level=args.prep_level)
  
 
 
 
     test_losses=[]
     for  batch in my_test_data_generator:
-        loss=trained_model.evaluate(batch,batch,batch_size=4,verbose=0)
+        loss=trained_model.evaluate(batch,batch,batch_size=1,verbose=0)
         test_losses.append(loss)
 
     
     my_anomalous_test_data_generator_natural=helper_functions.batch_generator(1,anomalous_test_data_list_natural,data_type='bad_2016',group=image_type,prep_level=args.prep_level)
-    my_anomalous_test_data_generator_artificial_hot_towers=helper_functions.batch_generator(2,anomalous_test_data_list_artificial_hot_towers,data_type='bad_2016/hot_towers',group=image_type,prep_level=args.prep_level)
-    my_anomalous_test_data_generator_artificial_missing_modules=helper_functions.batch_generator(2,anomalous_test_data_list_artificial_missing_modules,data_type='bad_2016/missing_modules',group=image_type,prep_level=args.prep_level)
+    my_anomalous_test_data_generator_artificial_hot_towers=helper_functions.batch_generator(1,anomalous_test_data_list_artificial_hot_towers,data_type='bad_2016/hot_towers',group=image_type,prep_level=args.prep_level)
+    my_anomalous_test_data_generator_artificial_missing_modules=helper_functions.batch_generator(1,anomalous_test_data_list_artificial_missing_modules,data_type='bad_2016/missing_modules',group=image_type,prep_level=args.prep_level)
 
     anomalous_test_losses_natural=[]
     anomalous_test_losses_artificial_missing_modules=[]

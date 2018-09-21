@@ -5,7 +5,7 @@
 #$ -m abe
 
 #$ -q gpu                # Specify queue
-#$ -l hostname="qa-1080ti-004"         # This job is just going to use one GPU card
+###$ -l hostname="qa-1080ti-009"         # This job is just going to use one GPU card
 #$ -o sgeLogs50            # Where to put the output
 
 # Since UGE doesn't have the nice submit file format from HTCondor, we have to define our possible jobs here
@@ -43,11 +43,12 @@ echo '==================================='
 #mkdir -p results/$wd
 #pushd results/$wd
 #echo $cmd
-cd /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/
+cd /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/semi_supervised_learning
 echo `pwd`
 source set_env.sh 
-
-python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/model_v50.py --model_name v50  --loss_name MSE --opt_name adadelta 
+cd scripts
+source runNew.sh
+#python /afs/crc.nd.edu/user/n/ndev/DQM_ML/Anomaly-Detection-for-ECAL-DQM/scripts/model_v50.py --model_name v50  --loss_name MSE --opt_name adadelta 
 
 
 cd -

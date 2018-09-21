@@ -1,7 +1,0 @@
-python plot_losses.py --loss_name binary_crossentropy --opt_name sgd --model_name v0
-python plot_losses.py --loss_name binary_crossentropy --opt_name sgd --model_name v1
-python plot_losses.py --loss_name binary_crossentropy --opt_name sgd --model_name v4
-python plot_losses.py --loss_name binary_crossentropy --opt_name sgd --model_name v5
-python plot_losses.py --loss_name binary_crossentropy --opt_name sgd --model_name v6
-python plot_losses.py --loss_name binary_crossentropy --opt_name sgd --model_name v7
-python plot_losses.py --loss_name binary_crossentropy --opt_name adam --model_name v9
